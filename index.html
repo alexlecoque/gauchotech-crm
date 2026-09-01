@@ -3,52 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GauchoTech CRM</title>
+<title>Neo O1 CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --color-bg:#ffffff;
-    --color-bg-secondary:#f0f2f7;
-    --color-bg-tertiary:#e4e8f2;
-    --color-text-primary:#003660;
-    --color-text-secondary:#5a6e85;
-    --color-border-tertiary:rgba(0,54,96,0.12);
-    --color-border-secondary:rgba(0,54,96,0.25);
-    --color-bg-info:#fff8e6;
-    --color-text-info:#b08d00;
-    --color-accent:#003660;
-    --color-gold:#febc11;
-    --color-gold-dark:#b08d00;
+    --color-bg:#222D2C;
+    --color-bg-secondary:#222D2C;
+    --color-bg-tertiary:#0E0F11;
+    --color-text-primary:#F6F5F0;
+    --color-text-secondary:#A7AAA9;
+    --color-border-tertiary:rgba(246,245,240,0.18);
+    --color-border-secondary:rgba(246,245,240,0.18);
+    --color-bg-info:rgba(133,173,165,0.12);
+    --color-text-info:#85ADA5;
+    --color-accent:#85ADA5;
+    --color-gold:#85ADA5;
+    --color-gold-dark:#85ADA5;
     --radius-md:8px;
     --radius-lg:12px;
     --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }
-  @media(prefers-color-scheme:dark){
-    :root{
-      --color-bg:#001e36;
-      --color-bg-secondary:#002a4a;
-      --color-bg-tertiary:#00213d;
-      --color-text-primary:#e8f0f8;
-      --color-text-secondary:#7a9ab8;
-      --color-border-tertiary:rgba(254,188,17,0.15);
-      --color-border-secondary:rgba(254,188,17,0.3);
-      --color-bg-info:#2a1f00;
-      --color-text-info:#febc11;
-      --color-accent:#febc11;
-      --color-gold:#febc11;
-      --color-gold-dark:#febc11;
-    }
-  }
-  body{font-family:var(--font);background:var(--color-bg-tertiary);color:var(--color-text-primary);min-height:100vh;padding:0;border-top:4px solid #febc11}
+  body{font-family:var(--font);background:radial-gradient(ellipse at center, #222D2C 0%, #0E0F11 70%);color:var(--color-text-primary);min-height:100vh;padding:0;border-top:4px solid var(--color-accent)}
   a{color:var(--color-text-info)}
   input,select,textarea{background:var(--color-bg);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--radius-md);padding:7px 10px;font-family:var(--font);font-size:13px;outline:none;width:100%}
-  input:focus,select:focus,textarea:focus{border-color:var(--color-text-info);box-shadow:0 0 0 2px rgba(24,95,165,0.15)}
+  input:focus,select:focus,textarea:focus{border-color:var(--color-text-info);box-shadow:0 0 0 2px rgba(133,173,165,0.15)}
   textarea{height:72px;resize:vertical}
 
   .app{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
-  .logo{font-size:18px;font-weight:700;letter-spacing:-0.02em;color:#003660}
-  .logo span{color:#febc11;font-weight:700}
+  .logo{font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--color-text-primary)}
+  .logo-word{font-family:var(--font);font-weight:700;color:var(--color-text-primary)}
+  .logo-num{font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--color-accent);font-feature-settings:"zero" 1;margin-left:0.25em;letter-spacing:0.02em}
   .saved-ts{font-size:12px;color:var(--color-text-secondary)}
 
   .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
@@ -58,15 +46,15 @@
 
   .tabs{display:flex;gap:4px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.5rem}
   .tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--font)}
-  .tab.active{color:#003660;border-bottom-color:#febc11;font-weight:500}
+  .tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-accent);font-weight:500}
 
   .section{display:none}.section.active{display:block}
   .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
   .toolbar-label{font-size:13px;color:var(--color-text-secondary)}
 
-  .btn{padding:6px 14px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--radius-md);background:var(--color-bg);cursor:pointer;color:var(--color-text-primary);font-family:var(--font)}
+  .btn{padding:6px 14px;font-size:12px;border:1px solid var(--color-border-secondary);border-radius:var(--radius-md);background:transparent;cursor:pointer;color:var(--color-text-primary);font-family:var(--font)}
   .btn:hover{background:var(--color-bg-secondary)}
-  .btn.primary{background:#003660;color:#febc11;border-color:#003660}
+  .btn.primary{background:var(--color-text-primary);color:var(--color-bg-tertiary);border-color:var(--color-text-primary)}
   .btn.primary:hover{opacity:0.85}
   .btn.sm{padding:3px 10px;font-size:11px}
   .btn.danger{border-color:#a32d2d;color:#a32d2d}
@@ -80,10 +68,28 @@
   .lead-card:active{cursor:grabbing}
   .lead-card:hover{border-color:var(--color-border-secondary)}
   .lead-card.dragging{opacity:0.35}
-  .stage.drag-over{outline:2px dashed #febc11;outline-offset:-3px;background:var(--color-bg-tertiary)}
+  .stage.drag-over{outline:2px dashed var(--color-accent);outline-offset:-3px;background:var(--color-bg-tertiary)}
   .lead-name{font-size:13px;font-weight:500;margin-bottom:2px}
   .lead-meta{font-size:11px;color:var(--color-text-secondary)}
+  .lead-pos{font-size:11px;color:var(--color-text-info);font-weight:500;margin-top:2px}
+
+  .county-group{margin-bottom:12px}
+  .county-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--color-bg-secondary);border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;user-select:none}
+  .county-hdr:hover{background:var(--color-bg-tertiary)}
+  .county-body{padding-left:12px;margin-top:6px}
+  .city-group{margin-bottom:6px}
+  .city-hdr{display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--color-bg);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-md);cursor:pointer;font-size:12px;font-weight:500;user-select:none}
+  .city-hdr:hover{background:var(--color-bg-secondary)}
+  .city-body{padding-left:12px;margin-top:4px}
+  .browse-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--color-bg);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-md);margin-bottom:4px;font-size:13px}
+  .browse-name{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .browse-phone{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
+  .browse-pos{font-size:11px;color:var(--color-text-info);font-weight:500;white-space:nowrap}
+  .caret{font-size:9px;width:12px;display:inline-block;transition:transform 0.15s;flex-shrink:0}
   .lead-empty{font-size:12px;color:var(--color-text-secondary);padding:8px 4px}
+  .pipeline-county{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-secondary);padding:6px 2px 3px;margin-top:4px;border-top:0.5px solid var(--color-border-tertiary)}
+  .pipeline-county:first-of-type{border-top:none;margin-top:0}
+  .pipeline-city{font-size:10px;color:var(--color-text-secondary);padding:4px 2px 2px;font-style:italic}
   .card-edit-btn{font-size:10px;padding:2px 8px;margin-top:6px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-md);background:none;cursor:pointer;color:var(--color-text-secondary);font-family:var(--font)}
   .card-edit-btn:hover{background:var(--color-bg-secondary);color:var(--color-text-primary)}
 
@@ -120,33 +126,104 @@
   .section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-secondary);margin:1.25rem 0 8px}
   .note-item{background:var(--color-bg-secondary);border-radius:var(--radius-md);padding:10px;margin-bottom:6px;font-size:13px}
   .note-date{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
-  .avatar{width:44px;height:44px;border-radius:50%;background:#003660;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;color:#febc11;flex-shrink:0}
+  .avatar{width:44px;height:44px;border-radius:50%;background:var(--color-accent);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;color:var(--color-bg-tertiary);flex-shrink:0}
 
   @media(max-width:600px){
     .stat-row{grid-template-columns:repeat(2,1fr)}
     .stage-cols{grid-template-columns:1fr 1fr}
     .app{padding:1rem}
   }
+  #map-container{height:540px;border-radius:var(--radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary)}
+  .map-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;align-items:center}
+  .map-legend-item{display:flex;align-items:center;gap:5px}
+  .map-dot{width:11px;height:11px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.7);flex-shrink:0}
+  .map-notice{font-size:12px;color:var(--color-text-secondary);margin-top:8px}
+
+  .todo-item{display:flex;align-items:flex-start;gap:10px;background:var(--color-bg);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-md);padding:10px 12px;margin-bottom:6px;transition:border-color 0.1s}
+  .todo-item.done{opacity:0.5}
+  .todo-item.dragging{opacity:0.35}
+  .todo-item.drag-over-top{border-top:2px solid var(--color-accent)}
+  .todo-item.drag-over-bottom{border-bottom:2px solid var(--color-accent)}
+  .todo-drag-handle{color:var(--color-text-secondary);cursor:grab;font-size:16px;flex-shrink:0;user-select:none;padding:0 2px;line-height:1.2}
+  .todo-drag-handle:active{cursor:grabbing}
+  .todo-check{width:16px;height:16px;flex-shrink:0;margin-top:1px;cursor:pointer;accent-color:var(--color-accent)}
+  .todo-body{flex:1;min-width:0}
+  .todo-text{font-size:13px;font-weight:500}
+  .todo-item.done .todo-text{text-decoration:line-through;color:var(--color-text-secondary)}
+  .todo-due{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+  .todo-due.overdue{color:#a32d2d;font-weight:500}
+  .todo-section-hdr{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-secondary);padding:8px 0 4px;margin-top:8px;border-top:0.5px solid var(--color-border-tertiary)}
+  .todo-section-hdr:first-child{border-top:none;margin-top:0}
 </style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 <body>
 <div class="app">
 
   <div class="topbar">
-    <div class="logo">GauchoTech <span>CRM</span></div>
+    <div class="logo"><span class="logo-word">Neo</span><span class="logo-num">01</span> CRM</div>
     <div class="saved-ts" id="last-saved"></div>
   </div>
 
   <div class="stat-row" id="stats-row"></div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('pipeline')">Pipeline</button>
+    <button class="tab active" onclick="showTab('browse')">Browse</button>
+    <button class="tab" onclick="showTab('pipeline')">Pipeline</button>
+    <button class="tab" onclick="showTab('map')">Map</button>
     <button class="tab" onclick="showTab('customers')">Customers</button>
     <button class="tab" onclick="showTab('calls')">Call log</button>
+    <button class="tab" onclick="showTab('tasks')">Action Tasks</button>
+  </div>
+
+  <!-- BROWSE -->
+  <div class="section active" id="sec-browse">
+    <div class="toolbar">
+      <span class="toolbar-label" id="browse-count"></span>
+      <select id="browse-stage-filter" onchange="renderBrowse()" style="width:auto">
+        <option value="">All stages</option>
+        <option value="prospect">Prospect</option>
+        <option value="contacted">Contacted</option>
+        <option value="demo">Demo scheduled</option>
+        <option value="closed">Closed / won</option>
+      </select>
+      <button class="btn" id="browse-view-toggle" onclick="toggleBrowseView()">Dial list view</button>
+    </div>
+    <div id="browse-tree"></div>
+    <div id="browse-list" style="display:none">
+      <table>
+        <thead><tr>
+          <th style="cursor:pointer" onclick="sortDialList('name')">Restaurant</th>
+          <th style="cursor:pointer" onclick="sortDialList('owner')">Owner / manager</th>
+          <th style="cursor:pointer" onclick="sortDialList('role')">Role</th>
+          <th style="cursor:pointer" onclick="sortDialList('phone')">Phone</th>
+          <th style="cursor:pointer" onclick="sortDialList('city')">City</th>
+          <th style="cursor:pointer" onclick="sortDialList('stage')">Stage</th>
+          <th>Website</th>
+          <th>Calls</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="browse-list-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="section" id="sec-map">
+    <div class="map-legend">
+      <span style="font-size:12px;color:var(--color-text-secondary);margin-right:4px">Stage:</span>
+      <span class="map-legend-item"><span class="map-dot" style="background:#5a6e85"></span>Prospect</span>
+      <span class="map-legend-item"><span class="map-dot" style="background:#febc11"></span>Contacted</span>
+      <span class="map-legend-item"><span class="map-dot" style="background:#185fa5"></span>Demo scheduled</span>
+      <span class="map-legend-item"><span class="map-dot" style="background:#1a7a1a"></span>Closed / won</span>
+    </div>
+    <div id="map-container"></div>
+    <div class="map-notice" id="map-notice" style="display:none"></div>
   </div>
 
   <!-- PIPELINE -->
-  <div class="section active" id="sec-pipeline">
+  <div class="section" id="sec-pipeline">
     <div class="toolbar">
       <span class="toolbar-label">Drag cards between columns · click Edit to update a lead</span>
       <button class="btn primary" onclick="openModal('lead')">+ Add lead</button>
@@ -184,6 +261,15 @@
     </table>
   </div>
 
+  <!-- TASKS -->
+  <div class="section" id="sec-tasks">
+    <div class="toolbar">
+      <span class="toolbar-label" id="tasks-count"></span>
+      <button class="btn primary" onclick="openModal('todo')">+ Add task</button>
+    </div>
+    <div id="tasks-list"></div>
+  </div>
+
 </div>
 
 <!-- MODAL: ADD LEAD -->
@@ -192,8 +278,18 @@
     <div class="modal-title">Add lead</div>
     <div class="form-row"><label>Restaurant name *</label><input id="l-name" placeholder="e.g. Tony's Pizza"></div>
     <div class="form-row"><label>Owner name</label><input id="l-owner" placeholder="e.g. Tony Russo"></div>
+    <div class="form-row"><label>Role</label><input id="l-role" placeholder="e.g. Owner, GM, President"></div>
     <div class="form-row"><label>Phone</label><input id="l-phone" placeholder="(805) 555-0000"></div>
     <div class="form-row"><label>City</label><input id="l-city" placeholder="e.g. Santa Barbara"></div>
+    <div class="form-row"><label>County</label>
+      <select id="l-county">
+        <option value="">— Unknown —</option>
+        <option value="Santa Barbara">Santa Barbara</option>
+        <option value="Ventura">Ventura</option>
+        <option value="San Luis Obispo">San Luis Obispo</option>
+      </select>
+    </div>
+    <div class="form-row"><label>POS system</label><input id="l-pos" placeholder="e.g. Square, Toast, Unknown"></div>
     <div class="form-row"><label>Stage</label>
       <select id="l-stage">
         <option value="prospect">Prospect</option>
@@ -216,8 +312,20 @@
     <div class="modal-title">Edit lead</div>
     <div class="form-row"><label>Restaurant name *</label><input id="e-name" placeholder="e.g. Tony's Pizza"></div>
     <div class="form-row"><label>Owner name</label><input id="e-owner" placeholder="e.g. Tony Russo"></div>
+    <div class="form-row"><label>Role</label><input id="e-role" placeholder="e.g. Owner, GM, President"></div>
     <div class="form-row"><label>Phone</label><input id="e-phone" placeholder="(805) 555-0000"></div>
+    <div class="form-row"><label>Address</label><input id="e-address" placeholder="123 State St, Santa Barbara, CA 93101"></div>
     <div class="form-row"><label>City</label><input id="e-city" placeholder="e.g. Santa Barbara"></div>
+    <div class="form-row"><label>Website</label><input id="e-website" placeholder="https://..."></div>
+    <div class="form-row"><label>County</label>
+      <select id="e-county">
+        <option value="">— Unknown —</option>
+        <option value="Santa Barbara">Santa Barbara</option>
+        <option value="Ventura">Ventura</option>
+        <option value="San Luis Obispo">San Luis Obispo</option>
+      </select>
+    </div>
+    <div class="form-row"><label>POS system</label><input id="e-pos" placeholder="e.g. Square, Toast, Unknown"></div>
     <div class="form-row"><label>Stage</label>
       <select id="move-stage">
         <option value="prospect">Prospect</option>
@@ -283,25 +391,77 @@
   </div>
 </div>
 
+<!-- MODAL: ADD TASK -->
+<div class="modal-overlay" id="modal-todo">
+  <div class="modal-box">
+    <div class="modal-title">Add action task</div>
+    <div class="form-row"><label>Task *</label><input id="td-text" placeholder="e.g. Follow up with Mario's Pizza"></div>
+    <div class="form-row"><label>Due date (optional)</label><input id="td-due" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('todo')">Cancel</button>
+      <button class="btn primary" onclick="saveTodo()">Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT TASK -->
+<div class="modal-overlay" id="modal-todo-edit">
+  <div class="modal-box">
+    <div class="modal-title">Edit action task</div>
+    <div class="form-row"><label>Task *</label><input id="tde-text" placeholder="e.g. Follow up with Mario's Pizza"></div>
+    <div class="form-row"><label>Due date (optional)</label><input id="tde-due" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn danger" onclick="deleteTodoFromEdit()">Delete</button>
+      <button class="btn" onclick="closeModal('todo-edit')">Cancel</button>
+      <button class="btn primary" onclick="saveEditTodo()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const STAGES=['prospect','contacted','demo','closed'];
-const STAGE_LABELS={prospect:'Prospect',contacted:'Contacted',demo:'Demo scheduled',closed:'Closed / won'};
+const STAGES = ['prospect', 'contacted', 'demo', 'closed'];
+const STAGE_LABELS = { prospect: 'Prospect', contacted: 'Contacted', demo: 'Demo scheduled', closed: 'Closed / won' };
 
-function load(k){try{return JSON.parse(localStorage.getItem('gtcrm_'+k)||'[]')}catch{return[]}}
-function save(k,v){localStorage.setItem('gtcrm_'+k,JSON.stringify(v));updateSaved()}
-function updateSaved(){const el=document.getElementById('last-saved');if(el)el.textContent='Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+let leads = [], customers = [], calls = [], todos = [];
+let movingLeadId = null;
 
-let leads=load('leads'),customers=load('customers'),calls=load('calls');
-let movingLeadId=null;
+function updateSaved() {
+  const el = document.getElementById('last-saved');
+  if (el) el.textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
-function renderStats(){
-  const el=document.getElementById('stats-row');
-  const activeC=customers.filter(c=>c.status==='active').length;
-  const pilotC=customers.filter(c=>c.status==='pilot').length;
-  const n=new Date();
-  const thisMonth=calls.filter(c=>{const d=new Date(c.date);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()}).length;
-  el.innerHTML=`
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  return res.ok ? res.json() : null;
+}
+
+async function init() {
+  [leads, customers, calls, todos] = await Promise.all([
+    api('/api/leads').then(d => d || []),
+    api('/api/customers').then(d => d || []),
+    api('/api/calls').then(d => d || []),
+    api('/api/todos').then(d => d || []),
+  ]);
+  renderStats();
+  renderBrowse();
+  renderPipeline();
+  renderCustomers();
+  renderCalls();
+  renderTasks();
+}
+
+function renderStats() {
+  const el = document.getElementById('stats-row');
+  const activeC = customers.filter(c => c.status === 'active').length;
+  const pilotC = customers.filter(c => c.status === 'pilot').length;
+  const n = new Date();
+  const thisMonth = calls.filter(c => {
+    const d = new Date(c.date);
+    return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+  }).length;
+  el.innerHTML = `
     <div class="stat"><div class="stat-label">Total leads</div><div class="stat-val">${leads.length}</div></div>
     <div class="stat"><div class="stat-label">Active customers</div><div class="stat-val">${activeC}</div></div>
     <div class="stat"><div class="stat-label">Pilots</div><div class="stat-val">${pilotC}</div></div>
@@ -309,204 +469,665 @@ function renderStats(){
   `;
 }
 
-function renderPipeline(){
-  const board=document.getElementById('pipeline-board');
-  board.innerHTML='';
-  STAGES.forEach(stage=>{
-    const items=leads.filter(l=>l.stage===stage);
-    const col=document.createElement('div');
-    col.className='stage';col.dataset.stage=stage;
-    col.innerHTML=`<div class="stage-header"><span>${STAGE_LABELS[stage]}</span><span class="badge">${items.length}</span></div>`;
-    if(!items.length){col.innerHTML+=`<div class="lead-empty">Drop here</div>`;}
-    items.forEach(l=>{
-      const card=document.createElement('div');
-      card.className='lead-card';card.draggable=true;card.dataset.id=l.id;
-      card.innerHTML=`<div class="lead-name">${l.name}</div><div class="lead-meta">${l.owner||''}</div>${l.city?`<div class="lead-meta">${l.city}</div>`:''}<button class="card-edit-btn">Edit</button>`;
-      card.querySelector('.card-edit-btn').addEventListener('click',e=>{e.stopPropagation();openEditModal(l.id);});
-      card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',l.id);setTimeout(()=>card.classList.add('dragging'),0);});
-      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
-      col.appendChild(card);
-    });
-    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');});
-    col.addEventListener('dragleave',e=>{if(!col.contains(e.relatedTarget))col.classList.remove('drag-over');});
-    col.addEventListener('drop',e=>{
-      e.preventDefault();col.classList.remove('drag-over');
-      const id=e.dataTransfer.getData('text/plain');
-      const l=leads.find(x=>x.id===id);
-      if(l&&l.stage!==stage){l.stage=stage;save('leads',leads);leads=load('leads');renderPipeline();renderStats();}
+function makeCard(l, col, stage) {
+  const card = document.createElement('div');
+  card.className = 'lead-card';
+  card.draggable = true;
+  card.dataset.id = l.id;
+  card.innerHTML = `
+    <div class="lead-name">${l.name}</div>
+    ${l.pos ? `<div class="lead-pos">${l.pos}</div>` : ''}
+    <button class="card-edit-btn">Edit</button>
+  `;
+  card.querySelector('.card-edit-btn').addEventListener('click', e => { e.stopPropagation(); openEditModal(l.id); });
+  card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', l.id); setTimeout(() => card.classList.add('dragging'), 0); });
+  card.addEventListener('dragend', () => card.classList.remove('dragging'));
+  col.appendChild(card);
+}
+
+function renderPipeline() {
+  const board = document.getElementById('pipeline-board');
+  board.innerHTML = '';
+  STAGES.forEach(stage => {
+    const items = leads.filter(l => l.stage === stage);
+    const col = document.createElement('div');
+    col.className = 'stage';
+    col.dataset.stage = stage;
+    col.innerHTML = `<div class="stage-header"><span>${STAGE_LABELS[stage]}</span><span class="badge">${items.length}</span></div>`;
+
+    if (!items.length) {
+      col.innerHTML += `<div class="lead-empty">Drop here</div>`;
+    } else {
+      // Group by county → city
+      const byCounty = {};
+      items.forEach(l => {
+        const county = l.county || 'Other';
+        const city = l.city || 'Unknown';
+        if (!byCounty[county]) byCounty[county] = {};
+        if (!byCounty[county][city]) byCounty[county][city] = [];
+        byCounty[county][city].push(l);
+      });
+      const counties = [...COUNTY_ORDER.filter(c => byCounty[c]), ...Object.keys(byCounty).filter(c => !COUNTY_ORDER.includes(c))];
+      counties.forEach(county => {
+        const countyHdr = document.createElement('div');
+        countyHdr.className = 'pipeline-county';
+        countyHdr.textContent = county + ' County';
+        col.appendChild(countyHdr);
+        const allCities = Object.keys(byCounty[county]);
+        const cityOrder = CITY_ORDER[county] || [];
+        const cities = [...cityOrder.filter(c => allCities.includes(c)), ...allCities.filter(c => !cityOrder.includes(c)).sort()];
+        cities.forEach(city => {
+          const cityHdr = document.createElement('div');
+          cityHdr.className = 'pipeline-city';
+          cityHdr.textContent = city;
+          col.appendChild(cityHdr);
+          byCounty[county][city].forEach(l => makeCard(l, col, stage));
+        });
+      });
+    }
+
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over'); });
+    col.addEventListener('drop', async e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const l = leads.find(x => x.id === id);
+      if (l && l.stage !== stage) {
+        l.stage = stage;
+        await api('/api/leads/' + id, 'PUT', l);
+        updateSaved();
+        renderPipeline();
+        renderStats();
+      }
     });
     board.appendChild(col);
   });
 }
 
-function openEditModal(id){
-  movingLeadId=id;
-  const l=leads.find(x=>x.id===id);
-  document.getElementById('e-name').value=l.name||'';
-  document.getElementById('e-owner').value=l.owner||'';
-  document.getElementById('e-phone').value=l.phone||'';
-  document.getElementById('e-city').value=l.city||'';
-  document.getElementById('e-notes').value=l.notes||'';
-  document.getElementById('move-stage').value=l.stage;
+function openEditModal(id) {
+  movingLeadId = id;
+  const l = leads.find(x => x.id === id);
+  document.getElementById('e-name').value = l.name || '';
+  document.getElementById('e-owner').value = l.owner || '';
+  document.getElementById('e-role').value = l.role || '';
+  document.getElementById('e-phone').value = l.phone || '';
+  document.getElementById('e-address').value = l.address || '';
+  document.getElementById('e-city').value = l.city || '';
+  document.getElementById('e-county').value = l.county || '';
+  document.getElementById('e-website').value = l.website || '';
+  document.getElementById('e-pos').value = l.pos || '';
+  document.getElementById('e-notes').value = l.notes || '';
+  document.getElementById('move-stage').value = l.stage;
   document.getElementById('modal-move').classList.add('open');
 }
-function openMoveModal(id){openEditModal(id);}
+function openMoveModal(id) { openEditModal(id); }
 
-function renderCustomers(){
-  const tbody=document.getElementById('customers-tbody');
-  const count=document.getElementById('cust-count');
-  count.textContent=customers.length+' customer'+(customers.length===1?'':'s');
-  if(!customers.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="6">No customers yet</td></tr>`;return;}
-  tbody.innerHTML=customers.map(c=>`
+function renderCustomers() {
+  const tbody = document.getElementById('customers-tbody');
+  const count = document.getElementById('cust-count');
+  count.textContent = customers.length + ' customer' + (customers.length === 1 ? '' : 's');
+  if (!customers.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No customers yet</td></tr>`; return; }
+  tbody.innerHTML = customers.map(c => `
     <tr>
       <td style="font-weight:500">${c.name}</td>
-      <td>${c.owner||'—'}</td>
-      <td>${c.city||'—'}</td>
+      <td>${c.owner || '—'}</td>
+      <td>${c.city || '—'}</td>
       <td><span class="pill pill-${c.status}">${c.status}</span></td>
-      <td style="color:var(--color-text-secondary)">${c.since||'—'}</td>
+      <td style="color:var(--color-text-secondary)">${c.since || '—'}</td>
       <td><button class="btn sm" onclick="showCustomerDetail('${c.id}')">View</button></td>
     </tr>
   `).join('');
 }
 
-function showCustomerDetail(id){
-  const c=customers.find(x=>x.id===id);if(!c)return;
-  const relCalls=calls.filter(x=>x.restaurant.toLowerCase().includes(c.name.toLowerCase().slice(0,6)));
-  document.getElementById('customers-list-view').style.display='none';
-  const panel=document.getElementById('customer-detail');
+function showCustomerDetail(id) {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+  const relCalls = calls.filter(x => x.restaurant.toLowerCase().includes(c.name.toLowerCase().slice(0, 6)));
+  document.getElementById('customers-list-view').style.display = 'none';
+  const panel = document.getElementById('customer-detail');
   panel.classList.add('open');
-  panel.querySelector('#customer-detail-content').innerHTML=`
+  panel.querySelector('#customer-detail-content').innerHTML = `
     <div class="detail-card">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="avatar">${(c.name||'?').slice(0,1).toUpperCase()}</div>
+        <div class="avatar">${(c.name || '?').slice(0, 1).toUpperCase()}</div>
         <div style="flex:1">
           <div style="font-size:16px;font-weight:600">${c.name}</div>
-          <div style="font-size:13px;color:var(--color-text-secondary)">${c.city||''}</div>
+          <div style="font-size:13px;color:var(--color-text-secondary)">${c.city || ''}</div>
         </div>
         <span class="pill pill-${c.status}">${c.status}</span>
       </div>
       <div class="detail-grid">
-        <div class="detail-key">Owner</div><div class="detail-val">${c.owner||'—'}</div>
-        <div class="detail-key">Phone</div><div class="detail-val">${c.phone||'—'}</div>
-        <div class="detail-key">Monthly calls</div><div class="detail-val">${c.monthlyCalls||'—'}</div>
-        <div class="detail-key">Square ID</div><div class="detail-val" style="font-size:12px;font-family:monospace">${c.squareId||'—'}</div>
-        <div class="detail-key">Customer since</div><div class="detail-val">${c.since||'—'}</div>
+        <div class="detail-key">Owner</div><div class="detail-val">${c.owner || '—'}</div>
+        <div class="detail-key">Phone</div><div class="detail-val">${c.phone || '—'}</div>
+        <div class="detail-key">Monthly calls</div><div class="detail-val">${c.monthlyCalls || '—'}</div>
+        <div class="detail-key">Square ID</div><div class="detail-val" style="font-size:12px;font-family:monospace">${c.squareId || '—'}</div>
+        <div class="detail-key">Customer since</div><div class="detail-val">${c.since || '—'}</div>
       </div>
-      ${c.notes?`<div style="margin-top:12px;font-size:13px;color:var(--color-text-secondary);border-top:0.5px solid var(--color-border-tertiary);padding-top:10px">${c.notes}</div>`:''}
+      ${c.notes ? `<div style="margin-top:12px;font-size:13px;color:var(--color-text-secondary);border-top:0.5px solid var(--color-border-tertiary);padding-top:10px">${c.notes}</div>` : ''}
     </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
       <button class="btn danger" onclick="deleteCustomer('${c.id}')">Delete customer</button>
     </div>
     <div class="section-label">Call history (${relCalls.length})</div>
-    ${relCalls.length===0
-      ?'<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'
-      :relCalls.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(ca=>`
+    ${relCalls.length === 0
+      ? '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'
+      : relCalls.sort((a, b) => new Date(b.date) - new Date(a.date)).map(ca => `
         <div class="note-item">
-          <div style="font-weight:500">${ca.outcome||'Call logged'}</div>
-          <div class="note-date">${ca.date} · ${ca.direction} ${ca.duration?'· '+ca.duration+' min':''}</div>
+          <div style="font-weight:500">${ca.outcome || 'Call logged'}</div>
+          <div class="note-date">${ca.date} · ${ca.direction} ${ca.duration ? '· ' + ca.duration + ' min' : ''}</div>
         </div>`).join('')}
   `;
 }
 
-function closeDetail(){
-  document.getElementById('customers-list-view').style.display='';
+function closeDetail() {
+  document.getElementById('customers-list-view').style.display = '';
   document.getElementById('customer-detail').classList.remove('open');
 }
 
-function deleteCustomer(id){
-  if(!confirm('Delete this customer?'))return;
-  customers=customers.filter(x=>x.id!==id);
-  save('customers',customers);
-  closeDetail();renderCustomers();renderStats();
+async function deleteCustomer(id) {
+  if (!confirm('Delete this customer?')) return;
+  await api('/api/customers/' + id, 'DELETE');
+  customers = customers.filter(x => x.id !== id);
+  updateSaved();
+  closeDetail();
+  renderCustomers();
+  renderStats();
 }
 
-function renderCalls(){
-  const tbody=document.getElementById('calls-tbody');
-  const count=document.getElementById('calls-count');
-  count.textContent=calls.length+' call'+(calls.length===1?'':'s')+' logged';
-  if(!calls.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="7">No calls logged yet</td></tr>`;return;}
-  const sorted=[...calls].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  tbody.innerHTML=sorted.map(c=>`
+function renderCalls() {
+  const tbody = document.getElementById('calls-tbody');
+  const count = document.getElementById('calls-count');
+  count.textContent = calls.length + ' call' + (calls.length === 1 ? '' : 's') + ' logged';
+  if (!calls.length) { tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No calls logged yet</td></tr>`; return; }
+  const sorted = [...calls].sort((a, b) => new Date(b.date) - new Date(a.date));
+  tbody.innerHTML = sorted.map(c => `
     <tr>
       <td style="color:var(--color-text-secondary);white-space:nowrap">${c.date}</td>
       <td style="font-weight:500">${c.restaurant}</td>
-      <td>${c.contact||'—'}</td>
-      <td><span class="pill pill-${c.direction==='inbound'?'in':c.direction==='outbound'?'out':'missed'}">${c.direction}</span></td>
-      <td>${c.duration?c.duration+' min':'—'}</td>
-      <td style="max-width:180px">${c.outcome||'—'}</td>
+      <td>${c.contact || '—'}</td>
+      <td><span class="pill pill-${c.direction === 'inbound' ? 'in' : c.direction === 'outbound' ? 'out' : 'missed'}">${c.direction}</span></td>
+      <td>${c.duration ? c.duration + ' min' : '—'}</td>
+      <td style="max-width:180px">${c.outcome || '—'}</td>
       <td><button class="btn sm danger" onclick="deleteCall('${c.id}')">Delete</button></td>
     </tr>
   `).join('');
 }
 
-function deleteCall(id){
-  if(!confirm('Delete this call log?'))return;
-  calls=calls.filter(x=>x.id!==id);
-  save('calls',calls);renderCalls();renderStats();
+async function deleteCall(id) {
+  if (!confirm('Delete this call log?')) return;
+  await api('/api/calls/' + id, 'DELETE');
+  calls = calls.filter(x => x.id !== id);
+  updateSaved();
+  renderCalls();
+  renderStats();
 }
 
-function showTab(t){
-  document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['pipeline','customers','calls'][i]===t)});
-  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
-  document.getElementById('sec-'+t).classList.add('active');
+const COUNTY_ORDER = ['Santa Barbara', 'Ventura', 'San Luis Obispo'];
+
+// Cities ordered by proximity to Isla Vista
+const CITY_ORDER = {
+  'Santa Barbara': ['Goleta', 'Santa Barbara', 'Carpinteria', 'Buellton', 'Lompoc', 'Solvang', 'Orcutt', 'Santa Maria'],
+  'Ventura': ['Ventura', 'Oxnard', 'Port Hueneme', 'Camarillo', 'Ojai', 'Moorpark', 'Thousand Oaks', 'Westlake Village', 'Simi Valley', 'Fillmore'],
+  'San Luis Obispo': ['Pismo Beach', 'Arroyo Grande', 'Grover Beach', 'Nipomo', 'San Luis Obispo', 'Morro Bay', 'Templeton', 'Atascadero', 'Paso Robles'],
+};
+const STAGE_COLORS = { prospect: 'inactive', contacted: 'pilot', demo: 'in', closed: 'active' };
+
+let browseView = 'tree';
+let dialSort = { key: 'city', dir: 1 };
+
+function toggleBrowseView() {
+  browseView = browseView === 'tree' ? 'list' : 'tree';
+  document.getElementById('browse-tree').style.display = browseView === 'tree' ? '' : 'none';
+  document.getElementById('browse-list').style.display = browseView === 'list' ? '' : 'none';
+  document.getElementById('browse-view-toggle').textContent = browseView === 'tree' ? 'Dial list view' : 'Tree view';
+  renderBrowse();
 }
 
-function openModal(type){
-  if(type==='call'){document.getElementById('ca-date').value=new Date().toISOString().slice(0,10)}
-  document.getElementById('modal-'+type).classList.add('open');
+function sortDialList(key) {
+  dialSort = { key, dir: dialSort.key === key ? -dialSort.dir : 1 };
+  renderBrowse();
 }
-function closeModal(type){document.getElementById('modal-'+type).classList.remove('open')}
 
-document.querySelectorAll('.modal-overlay').forEach(el=>{
-  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')});
+function renderDialList(filtered) {
+  const { key, dir } = dialSort;
+  const sorted = [...filtered].sort((a, b) => {
+    const av = (a[key] || '').toString().toLowerCase();
+    const bv = (b[key] || '').toString().toLowerCase();
+    return av < bv ? -dir : av > bv ? dir : 0;
+  });
+  document.getElementById('browse-list-tbody').innerHTML = sorted.map(l => `
+    <tr>
+      <td>${l.name}</td>
+      <td>${l.owner || '—'}</td>
+      <td>${l.role || '—'}</td>
+      <td>${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}">${l.phone}</a>` : '—'}</td>
+      <td>${l.city || '—'}</td>
+      <td><span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span></td>
+      <td>${l.website ? `<a href="${l.website}" target="_blank" rel="noopener">Site ↗</a>` : '—'}</td>
+      <td>${dialListCallSummary(l.name)}</td>
+      <td>
+        <button class="card-edit-btn" onclick="logCallForLead('${l.id}')">Log call</button>
+        <button class="card-edit-btn" onclick="openEditModal('${l.id}')">Edit</button>
+      </td>
+    </tr>`).join('');
+}
+
+function dialListCallSummary(restaurantName) {
+  const matches = calls.filter(c => c.restaurant === restaurantName).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (!matches.length) return '—';
+  const last = matches[0];
+  return `${matches.length}&times; <span style="color:var(--color-text-secondary);font-size:11px">(last ${last.date || '?'}, ${last.outcome ? last.outcome.slice(0, 40) : last.direction})</span>`;
+}
+
+let callingLeadId = null;
+
+function logCallForLead(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  callingLeadId = id;
+  document.getElementById('ca-rest').value = l.name;
+  document.getElementById('ca-contact').value = l.owner || '';
+  document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('ca-dir').value = 'outbound';
+  document.getElementById('ca-dur').value = '';
+  document.getElementById('ca-outcome').value = '';
+  document.getElementById('modal-call').classList.add('open');
+}
+
+function renderBrowse() {
+  const stageFilter = document.getElementById('browse-stage-filter').value;
+  const filtered = stageFilter ? leads.filter(l => l.stage === stageFilter) : leads;
+  document.getElementById('browse-count').textContent = `${filtered.length} lead${filtered.length === 1 ? '' : 's'}`;
+  if (browseView === 'list') { renderDialList(filtered); return; }
+
+  const byCounty = {};
+  filtered.forEach(l => {
+    const county = l.county || 'Other';
+    const city = l.city || 'Unknown';
+    if (!byCounty[county]) byCounty[county] = {};
+    if (!byCounty[county][city]) byCounty[county][city] = [];
+    byCounty[county][city].push(l);
+  });
+
+  const counties = [...COUNTY_ORDER.filter(c => byCounty[c]), ...Object.keys(byCounty).filter(c => !COUNTY_ORDER.includes(c))];
+
+  document.getElementById('browse-tree').innerHTML = counties.length ? counties.map(county => {
+    const cities = Object.keys(byCounty[county]).sort();
+    const total = cities.reduce((n, c) => n + byCounty[county][c].length, 0);
+    return `<div class="county-group">
+      <div class="county-hdr" onclick="toggleEl(this.nextElementSibling,this.querySelector('.caret'))">
+        <span class="caret">▶</span><span>${county} County</span><span class="badge">${total}</span>
+      </div>
+      <div class="county-body" style="display:none">${cities.map(city => {
+        const cityLeads = byCounty[county][city];
+        return `<div class="city-group">
+          <div class="city-hdr" onclick="toggleEl(this.nextElementSibling,this.querySelector('.caret'))">
+            <span class="caret">▶</span><span>${city}</span><span class="badge">${cityLeads.length}</span>
+          </div>
+          <div class="city-body" style="display:none">${cityLeads.map(l => `
+            <div class="browse-row">
+              <span class="browse-name">${l.name}</span>
+              ${l.phone ? `<span class="browse-phone">${l.phone}</span>` : ''}
+              ${l.pos ? `<span class="browse-pos">${l.pos}</span>` : ''}
+              <span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span>
+              <button class="card-edit-btn" onclick="openEditModal('${l.id}')">Edit</button>
+            </div>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('') : '<div style="font-size:13px;color:var(--color-text-secondary);padding:1rem 0">No leads yet — run the scraper to populate.</div>';
+}
+
+function toggleEl(body, caret) {
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (caret) caret.style.transform = open ? '' : 'rotate(90deg)';
+}
+
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el, i) => { el.classList.toggle('active', ['browse', 'pipeline', 'map', 'customers', 'calls', 'tasks'][i] === t); });
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('sec-' + t).classList.add('active');
+  if (t === 'browse') renderBrowse();
+  if (t === 'map') renderMap();
+  if (t === 'tasks') renderTasks();
+}
+
+let crmMap = null;
+let mapMarkerLayer = null;
+const MAP_STAGE_COLORS = { prospect: '#5a6e85', contacted: '#febc11', demo: '#185fa5', closed: '#1a7a1a' };
+
+function renderMap() {
+  if (!crmMap) {
+    crmMap = L.map('map-container').setView([34.55, -119.8], 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18,
+    }).addTo(crmMap);
+    mapMarkerLayer = L.layerGroup().addTo(crmMap);
+  } else {
+    mapMarkerLayer.clearLayers();
+  }
+  crmMap.invalidateSize();
+
+  const withCoords = leads.filter(l => l.lat != null && l.lng != null);
+  const missingCount = leads.length - withCoords.length;
+  const notice = document.getElementById('map-notice');
+  if (missingCount > 0) {
+    notice.textContent = `${missingCount} lead${missingCount === 1 ? '' : 's'} not shown — run: npm run geocode`;
+    notice.style.display = 'block';
+  } else {
+    notice.style.display = 'none';
+  }
+
+  withCoords.forEach(l => {
+    const color = MAP_STAGE_COLORS[l.stage] || '#5a6e85';
+    const marker = L.circleMarker([l.lat, l.lng], {
+      radius: 7,
+      fillColor: color,
+      color: '#fff',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: 0.85,
+    });
+    marker.bindPopup(`
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-width:160px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:3px">${l.name}</div>
+        <div style="font-size:12px;color:#5a6e85;margin-bottom:3px">${[l.city, l.county ? l.county + ' Co.' : ''].filter(Boolean).join(' · ')}</div>
+        ${l.pos ? `<div style="font-size:11px;color:#b08d00;font-weight:500;margin-bottom:4px">${l.pos}</div>` : ''}
+        <div style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:500;background:${color}22;color:${color === '#febc11' ? '#7a5800' : color};border:1px solid ${color}55;margin-bottom:8px">${STAGE_LABELS[l.stage] || l.stage}</div>
+        <br><button onclick="openEditModal('${l.id}')" style="font-size:11px;padding:3px 10px;border:0.5px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-family:inherit">Edit</button>
+      </div>
+    `);
+    mapMarkerLayer.addLayer(marker);
+  });
+}
+
+function openModal(type) {
+  if (type === 'call') document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modal-' + type).classList.add('open');
+}
+function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 
-function confirmMove(){
-  const name=document.getElementById('e-name').value.trim();if(!name)return;
-  const l=leads.find(x=>x.id===movingLeadId);
-  if(l){
-    l.name=name;
-    l.owner=document.getElementById('e-owner').value.trim();
-    l.phone=document.getElementById('e-phone').value.trim();
-    l.city=document.getElementById('e-city').value.trim();
-    l.notes=document.getElementById('e-notes').value.trim();
-    l.stage=document.getElementById('move-stage').value;
-    save('leads',leads);leads=load('leads');renderPipeline();renderStats();
+async function confirmMove() {
+  const name = document.getElementById('e-name').value.trim();
+  if (!name) return;
+  const l = leads.find(x => x.id === movingLeadId);
+  if (l) {
+    l.name = name;
+    l.owner = document.getElementById('e-owner').value.trim();
+    l.role = document.getElementById('e-role').value.trim();
+    l.phone = document.getElementById('e-phone').value.trim();
+    l.address = document.getElementById('e-address').value.trim();
+    l.city = document.getElementById('e-city').value.trim();
+    l.county = document.getElementById('e-county').value;
+    l.website = document.getElementById('e-website').value.trim();
+    l.pos = document.getElementById('e-pos').value.trim();
+    l.notes = document.getElementById('e-notes').value.trim();
+    l.stage = document.getElementById('move-stage').value;
+    await api('/api/leads/' + movingLeadId, 'PUT', l);
+    updateSaved();
+    renderPipeline();
+    renderStats();
   }
   closeModal('move');
 }
-function deleteLead(){
-  if(!confirm('Delete this lead?'))return;
-  leads=leads.filter(x=>x.id!==movingLeadId);
-  save('leads',leads);leads=load('leads');
-  closeModal('move');renderPipeline();renderStats();
+
+async function deleteLead() {
+  if (!confirm('Delete this lead?')) return;
+  await api('/api/leads/' + movingLeadId, 'DELETE');
+  leads = leads.filter(x => x.id !== movingLeadId);
+  updateSaved();
+  closeModal('move');
+  renderPipeline();
+  renderStats();
 }
 
-function saveLead(){
-  const name=document.getElementById('l-name').value.trim();if(!name)return;
-  leads.push({id:uid(),name,owner:document.getElementById('l-owner').value.trim(),phone:document.getElementById('l-phone').value.trim(),city:document.getElementById('l-city').value.trim(),stage:document.getElementById('l-stage').value,notes:document.getElementById('l-notes').value.trim(),added:new Date().toISOString().slice(0,10)});
-  save('leads',leads);leads=load('leads');
-  ['l-name','l-owner','l-phone','l-city','l-notes'].forEach(id=>document.getElementById(id).value='');
-  closeModal('lead');renderPipeline();renderStats();
+async function saveLead() {
+  const name = document.getElementById('l-name').value.trim();
+  if (!name) return;
+  const lead = await api('/api/leads', 'POST', {
+    name,
+    owner: document.getElementById('l-owner').value.trim(),
+    role: document.getElementById('l-role').value.trim(),
+    phone: document.getElementById('l-phone').value.trim(),
+    city: document.getElementById('l-city').value.trim(),
+    county: document.getElementById('l-county').value,
+    pos: document.getElementById('l-pos').value.trim(),
+    stage: document.getElementById('l-stage').value,
+    notes: document.getElementById('l-notes').value.trim(),
+  });
+  if (lead) leads.push(lead);
+  updateSaved();
+  ['l-name', 'l-owner', 'l-role', 'l-phone', 'l-city', 'l-pos', 'l-notes'].forEach(id => document.getElementById(id).value = '');
+  closeModal('lead');
+  renderPipeline();
+  renderStats();
 }
 
-function saveCustomer(){
-  const name=document.getElementById('c-name').value.trim();if(!name)return;
-  customers.push({id:uid(),name,owner:document.getElementById('c-owner').value.trim(),phone:document.getElementById('c-phone').value.trim(),city:document.getElementById('c-city').value.trim(),status:document.getElementById('c-status').value,monthlyCalls:document.getElementById('c-calls').value.trim(),squareId:document.getElementById('c-square').value.trim(),notes:document.getElementById('c-notes').value.trim(),since:new Date().toISOString().slice(0,10)});
-  save('customers',customers);customers=load('customers');
-  ['c-name','c-owner','c-phone','c-city','c-calls','c-square','c-notes'].forEach(id=>document.getElementById(id).value='');
-  closeModal('customer');renderCustomers();renderStats();
+async function saveCustomer() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) return;
+  const customer = await api('/api/customers', 'POST', {
+    name,
+    owner: document.getElementById('c-owner').value.trim(),
+    phone: document.getElementById('c-phone').value.trim(),
+    city: document.getElementById('c-city').value.trim(),
+    status: document.getElementById('c-status').value,
+    monthlyCalls: document.getElementById('c-calls').value.trim(),
+    squareId: document.getElementById('c-square').value.trim(),
+    notes: document.getElementById('c-notes').value.trim(),
+  });
+  if (customer) customers.push(customer);
+  updateSaved();
+  ['c-name', 'c-owner', 'c-phone', 'c-city', 'c-calls', 'c-square', 'c-notes'].forEach(id => document.getElementById(id).value = '');
+  closeModal('customer');
+  renderCustomers();
+  renderStats();
 }
 
-function saveCall(){
-  const rest=document.getElementById('ca-rest').value.trim();if(!rest)return;
-  calls.push({id:uid(),restaurant:rest,contact:document.getElementById('ca-contact').value.trim(),date:document.getElementById('ca-date').value,direction:document.getElementById('ca-dir').value,duration:document.getElementById('ca-dur').value.trim(),outcome:document.getElementById('ca-outcome').value.trim()});
-  save('calls',calls);calls=load('calls');
-  ['ca-rest','ca-contact','ca-dur','ca-outcome'].forEach(id=>document.getElementById(id).value='');
-  closeModal('call');renderCalls();renderStats();
+async function saveCall() {
+  const rest = document.getElementById('ca-rest').value.trim();
+  if (!rest) return;
+  const call = await api('/api/calls', 'POST', {
+    restaurant: rest,
+    contact: document.getElementById('ca-contact').value.trim(),
+    date: document.getElementById('ca-date').value,
+    direction: document.getElementById('ca-dir').value,
+    duration: document.getElementById('ca-dur').value.trim(),
+    outcome: document.getElementById('ca-outcome').value.trim(),
+  });
+  if (call) calls.push(call);
+  updateSaved();
+  ['ca-rest', 'ca-contact', 'ca-dur', 'ca-outcome'].forEach(id => document.getElementById(id).value = '');
+  callingLeadId = null;
+  closeModal('call');
+  renderCalls();
+  renderStats();
+  if (browseView === 'list') renderBrowse();
 }
 
-renderStats();renderPipeline();renderCustomers();renderCalls();
+let draggingTodoId = null;
+let editingTodoId = null;
+
+function renderTasks() {
+  const list = document.getElementById('tasks-list');
+  const count = document.getElementById('tasks-count');
+  const pending = todos.filter(t => !t.done).sort((a, b) => (a.sort ?? a.added ?? 0) < (b.sort ?? b.added ?? 0) ? -1 : 1);
+  const done = todos.filter(t => t.done);
+  count.textContent = `${pending.length} pending · ${done.length} done`;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  list.innerHTML = '';
+
+  if (pending.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'todo-section-hdr';
+    hdr.textContent = `Pending (${pending.length})`;
+    list.appendChild(hdr);
+    pending.forEach(t => {
+      const overdue = t.dueDate && t.dueDate < todayStr;
+      const el = document.createElement('div');
+      el.className = 'todo-item';
+      el.dataset.id = t.id;
+      el.draggable = true;
+      el.innerHTML = `
+        <span class="todo-drag-handle" title="Drag to reorder">⠿</span>
+        <input type="checkbox" class="todo-check">
+        <div class="todo-body">
+          <div class="todo-text">${t.text}</div>
+          ${t.dueDate ? `<div class="todo-due${overdue ? ' overdue' : ''}">${overdue ? 'Overdue · ' : 'Due '}${t.dueDate}</div>` : ''}
+        </div>
+        <button class="btn sm" style="margin-right:4px">Edit</button>
+        <button class="btn sm danger">Delete</button>
+      `;
+      el.querySelector('.todo-check').addEventListener('change', e => toggleTodo(t.id, e.target.checked));
+      el.querySelector('.btn.sm:not(.danger)').addEventListener('click', () => openEditTodo(t.id));
+      el.querySelector('.btn.sm.danger').addEventListener('click', () => deleteTodo(t.id));
+      el.addEventListener('dragstart', e => {
+        draggingTodoId = t.id;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => el.classList.add('dragging'), 0);
+      });
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        list.querySelectorAll('.todo-item').forEach(i => i.classList.remove('drag-over-top', 'drag-over-bottom'));
+      });
+      el.addEventListener('dragover', e => {
+        e.preventDefault();
+        list.querySelectorAll('.todo-item').forEach(i => i.classList.remove('drag-over-top', 'drag-over-bottom'));
+        const mid = el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2;
+        el.classList.add(e.clientY < mid ? 'drag-over-top' : 'drag-over-bottom');
+      });
+      el.addEventListener('dragleave', e => {
+        if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      el.addEventListener('drop', async e => {
+        e.preventDefault();
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+        if (!draggingTodoId || draggingTodoId === t.id) return;
+        const mid = el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2;
+        await reorderTodos(draggingTodoId, t.id, e.clientY < mid);
+      });
+      list.appendChild(el);
+    });
+  }
+
+  if (done.length) {
+    const hdr = document.createElement('div');
+    hdr.className = 'todo-section-hdr';
+    hdr.textContent = `Completed (${done.length})`;
+    list.appendChild(hdr);
+    done.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'todo-item done';
+      el.innerHTML = `
+        <input type="checkbox" class="todo-check" checked>
+        <div class="todo-body">
+          <div class="todo-text">${t.text}</div>
+          ${t.dueDate ? `<div class="todo-due">${t.dueDate}</div>` : ''}
+        </div>
+        <button class="btn sm" style="margin-right:4px">Edit</button>
+        <button class="btn sm danger">Delete</button>
+      `;
+      el.querySelector('.todo-check').addEventListener('change', e => toggleTodo(t.id, e.target.checked));
+      el.querySelector('.btn.sm:not(.danger)').addEventListener('click', () => openEditTodo(t.id));
+      el.querySelector('.btn.sm.danger').addEventListener('click', () => deleteTodo(t.id));
+      list.appendChild(el);
+    });
+  }
+
+  if (!todos.length) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:13px;color:var(--color-text-secondary);padding:1rem 0';
+    empty.textContent = 'No action tasks yet — add one to get started.';
+    list.appendChild(empty);
+  }
+}
+
+async function reorderTodos(draggedId, targetId, insertBefore) {
+  const pending = todos.filter(t => !t.done).sort((a, b) => (a.sort ?? a.added ?? 0) < (b.sort ?? b.added ?? 0) ? -1 : 1);
+  const fromIdx = pending.findIndex(t => t.id === draggedId);
+  if (fromIdx === -1) return;
+  const [moved] = pending.splice(fromIdx, 1);
+  const newTargetIdx = pending.findIndex(t => t.id === targetId);
+  if (newTargetIdx === -1) return;
+  pending.splice(insertBefore ? newTargetIdx : newTargetIdx + 1, 0, moved);
+  await Promise.all(pending.map((t, i) => {
+    t.sort = (i + 1) * 1000;
+    return api('/api/todos/' + t.id, 'PUT', t);
+  }));
+  updateSaved();
+  renderTasks();
+}
+
+async function saveTodo() {
+  const text = document.getElementById('td-text').value.trim();
+  if (!text) return;
+  const maxSort = todos.filter(t => !t.done).reduce((m, t) => Math.max(m, t.sort || 0), 0);
+  const todo = await api('/api/todos', 'POST', {
+    text,
+    dueDate: document.getElementById('td-due').value || null,
+    sort: maxSort + 1000,
+  });
+  if (todo) todos.push(todo);
+  updateSaved();
+  document.getElementById('td-text').value = '';
+  document.getElementById('td-due').value = '';
+  closeModal('todo');
+  renderTasks();
+}
+
+function openEditTodo(id) {
+  editingTodoId = id;
+  const t = todos.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('tde-text').value = t.text || '';
+  document.getElementById('tde-due').value = t.dueDate || '';
+  document.getElementById('modal-todo-edit').classList.add('open');
+}
+
+async function saveEditTodo() {
+  const text = document.getElementById('tde-text').value.trim();
+  if (!text) return;
+  const t = todos.find(x => x.id === editingTodoId);
+  if (!t) return;
+  t.text = text;
+  t.dueDate = document.getElementById('tde-due').value || null;
+  await api('/api/todos/' + editingTodoId, 'PUT', t);
+  updateSaved();
+  closeModal('todo-edit');
+  renderTasks();
+}
+
+async function deleteTodoFromEdit() {
+  if (!confirm('Delete this task?')) return;
+  await deleteTodo(editingTodoId);
+  closeModal('todo-edit');
+}
+
+async function toggleTodo(id, done) {
+  const t = todos.find(x => x.id === id);
+  if (!t) return;
+  t.done = done;
+  await api('/api/todos/' + id, 'PUT', t);
+  updateSaved();
+  renderTasks();
+}
+
+async function deleteTodo(id) {
+  await api('/api/todos/' + id, 'DELETE');
+  todos = todos.filter(x => x.id !== id);
+  updateSaved();
+  renderTasks();
+}
+
+init();
 </script>
 </body>
 </html>
