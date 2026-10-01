@@ -36,22 +36,37 @@ Railway project: `reasonable-wholeness` (separate from the GauchoTech Vapi serve
 
 ## Scraper
 
-Pulls pizza restaurants from Google Places API (New), detects POS system from website, writes directly to Railway Postgres.
+Finds independent pizza shops that run Square or Clover. Searches Google Places API (New) by area, skips anything already in the CRM, follows each shop's "order online" link to detect the POS, and records the evidence URL.
+
+**Dry run is the default** — results go to a CSV in `out/` and nothing is written to the database.
 
 ```bash
-npm run scrape
+npm run scrape -- --area sfv                    # dry run → out/scrape-sfv-<timestamp>.csv
+npm run scrape -- --area sfv --commit           # also write new Square/Clover leads to the database
+npm run scrape -- --import out/<file>.csv       # show what a reviewed CSV would write (no Google calls)
+npm run scrape -- --import out/<file>.csv --commit
 ```
+
+Options: `--max-requests N` (Places request budget, default 250), `--no-cache` (search results are cached in `data/places-cache/` for 30 days, so re-runs cost no Places calls).
+
+**Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
+
+**Areas** (`areas.js`): `sfv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
 
 **Coverage so far:**
 - [x] Santa Barbara County — ~102 leads (2026-05-04)
-- [ ] Ventura County — uncomment queries in `scraper.js`
-- [ ] San Luis Obispo County — uncomment queries in `scraper.js`
+- [ ] San Fernando Valley
+- [ ] Ventura County
+- [ ] San Luis Obispo County
+- [ ] Contra Costa County — was enabled in the old scraper; not recorded here whether it was run
 
-**To expand to new counties:** open `scraper.js` and uncomment the relevant city queries. Re-running is safe — duplicates are skipped by `place_id`.
+**Dedupe:** matched against existing leads and customers by `place_id`, then phone, then name + address. Another location of a business already in the CRM (shared phone, or same name + website) is added to that lead's `locations` instead of becoming a new lead.
 
-**POS systems detected:** Square, Toast, Clover, Slice, Lightspeed, TouchBistro, Revel, Chownow, Olo
+**CSV verdicts:** `new_target` (Square/Clover — the only rows written on `--commit`), `unknown_pos`, `excluded_pos`, `suspected_chain`, `extra_location`, `duplicate`, `excluded_chain`, `not_pizza`, `closed`. To promote a row by hand, change its verdict to `new_target` in the CSV and `--import` it.
 
-**Chains filtered out automatically:** Domino's, Pizza Hut, Papa John's, Little Caesars, Papa Murphy's, Round Table, Sbarro, CiCi's
+**POS systems detected:** Square, Clover (targets); Toast, SpotOn, Adora, Lightspeed, TouchBistro, Revel (excluded). Slice, ChowNow, Olo and DoorDash Storefront are ordering layers, not POS — those shops are reported as `unknown_pos`.
+
+**Chains filtered out automatically:** see `CHAINS` in `filters.js`. A name that appears 4+ times in one run is flagged `suspected_chain`.
 
 ## Environment Variables
 
@@ -73,11 +88,14 @@ Leads stored as JSONB in `crm_leads` table. Key fields:
 | `phone` | Phone number |
 | `address` | Full address |
 | `city` | City |
-| `county` | Santa Barbara / Ventura / San Luis Obispo |
+| `county` | Santa Barbara / Ventura / San Luis Obispo / Los Angeles / Contra Costa |
+| `area` | Scraper area label, e.g. San Fernando Valley |
 | `website` | Website URL |
 | `pos` | Detected POS system |
+| `pos_evidence` | URL that identified the POS (also `pos_confidence`, `ordering_url`, `pos_checked`) |
 | `stage` | prospect / contacted / demo / closed |
 | `place_id` | Google Places ID (unique — prevents duplicates) |
+| `locations` | Extra locations of the same business (`multi_location: true`) |
 
 ## CRM Features
 

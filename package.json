@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "scrape": "node scraper.js",
+    "scrape:sfv": "node scraper.js --area sfv",
     "geocode": "node geocode.js",
     "cleanup": "node cleanup.js",
     "cleanup:delete": "node cleanup.js --delete"

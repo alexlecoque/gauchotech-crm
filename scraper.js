@@ -1,195 +1,189 @@
 import 'dotenv/config';
-import fetch from 'node-fetch';
-import https from 'node:https';
-import { insertUnique } from './db.js';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { AREAS } from './areas.js';
+import { createPlacesClient, MAX_RESULTS_PER_QUERY, LIST_PRICE_PER_1000 } from './places.js';
+import { detectPOS } from './pos.js';
+import { buildIndex } from './match.js';
+import { screenPlaces, applyDetection, planWrites, CSV_COLUMNS } from './pipeline.js';
+import { toCsv, parseCsv } from './csv.js';
 
+// Usage:
+//   node scraper.js --area sfv                 dry run: search, check POS, write a CSV to out/
+//   node scraper.js --area sfv --commit        same, and write new leads to the database
+//   node scraper.js --import out/file.csv      show what a reviewed CSV would write (no Google calls)
+//   node scraper.js --import out/file.csv --commit
+// Options: --max-requests N (default 250)   --no-cache (ignore saved search results)
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const QUERY_DELAY_MS = 500;
-const PAGE_DELAY_MS = 2000;
-const POS_FETCH_DELAY_MS = 200;
+const POS_CONCURRENCY = 4;
+const DEFAULT_MAX_REQUESTS = 250;
+// First phrasing always runs; the second only when the first hits the 60-result cap
+const QUERY_PHRASES = ['pizza restaurant', 'pizzeria'];
 
-const SEARCH_QUERIES = [
-  // Santa Barbara County
-  { query: 'pizza restaurant in Santa Barbara CA',  county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Goleta CA',          county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Carpinteria CA',     county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Lompoc CA',          county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Santa Maria CA',     county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Solvang CA',         county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Buellton CA',        county: 'Santa Barbara' },
-  { query: 'pizza restaurant in Orcutt CA',          county: 'Santa Barbara' },
-  // Ventura County — uncomment when ready
-  // { query: 'pizza restaurant in Ventura CA',        county: 'Ventura' },
-  // { query: 'pizza restaurant in Oxnard CA',         county: 'Ventura' },
-  // { query: 'pizza restaurant in Camarillo CA',      county: 'Ventura' },
-  // { query: 'pizza restaurant in Thousand Oaks CA',  county: 'Ventura' },
-  // { query: 'pizza restaurant in Simi Valley CA',    county: 'Ventura' },
-  // { query: 'pizza restaurant in Moorpark CA',       county: 'Ventura' },
-  // { query: 'pizza restaurant in Fillmore CA',       county: 'Ventura' },
-  // { query: 'pizza restaurant in Ojai CA',           county: 'Ventura' },
-  // { query: 'pizza restaurant in Port Hueneme CA',   county: 'Ventura' },
-  // { query: 'pizza restaurant in Westlake Village CA', county: 'Ventura' },
-  // San Luis Obispo County — uncomment when ready
-  // { query: 'pizza restaurant in San Luis Obispo CA', county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Paso Robles CA',    county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Atascadero CA',     county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Arroyo Grande CA',  county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Grover Beach CA',   county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Pismo Beach CA',    county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Morro Bay CA',      county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Templeton CA',      county: 'San Luis Obispo' },
-  // { query: 'pizza restaurant in Nipomo CA',         county: 'San Luis Obispo' },
-  // Contra Costa County
-  { query: 'pizza restaurant in Concord CA',         county: 'Contra Costa' },
-  { query: 'pizza restaurant in Antioch CA',         county: 'Contra Costa' },
-  { query: 'pizza restaurant in Richmond CA',        county: 'Contra Costa' },
-  { query: 'pizza restaurant in San Ramon CA',       county: 'Contra Costa' },
-  { query: 'pizza restaurant in Walnut Creek CA',    county: 'Contra Costa' },
-  { query: 'pizza restaurant in Pittsburg CA',       county: 'Contra Costa' },
-  { query: 'pizza restaurant in Brentwood CA',       county: 'Contra Costa' },
-  { query: 'pizza restaurant in Danville CA',        county: 'Contra Costa' },
-  { query: 'pizza restaurant in Pleasant Hill CA',   county: 'Contra Costa' },
-  { query: 'pizza restaurant in Martinez CA',        county: 'Contra Costa' },
-  { query: 'pizza restaurant in Oakley CA',          county: 'Contra Costa' },
-  { query: 'pizza restaurant in Hercules CA',        county: 'Contra Costa' },
-  { query: 'pizza restaurant in El Cerrito CA',      county: 'Contra Costa' },
-  { query: 'pizza restaurant in Lafayette CA',       county: 'Contra Costa' },
-  { query: 'pizza restaurant in Pinole CA',          county: 'Contra Costa' },
-  { query: 'pizza restaurant in Orinda CA',          county: 'Contra Costa' },
-  { query: 'pizza restaurant in Clayton CA',         county: 'Contra Costa' },
-  { query: 'pizza restaurant in Moraga CA',          county: 'Contra Costa' },
-];
+const args = process.argv.slice(2);
+const flag = name => args.includes(name);
+const option = name => { const i = args.indexOf(name); return i !== -1 ? args[i + 1] : null; };
 
-// Skip major chains — Neo O1 targets independents
-const CHAINS = ['domino', 'pizza hut', 'papa john', 'little caesar', 'papa murphy', 'round table', 'sbarro', "cici's"];
+const COMMIT = flag('--commit');
+const AREA_KEY = option('--area');
+const IMPORT_FILE = option('--import');
+const MAX_REQUESTS = Number(option('--max-requests')) || DEFAULT_MAX_REQUESTS;
 
-const POS_PATTERNS = [
-  { name: 'Square',      patterns: ['squareup.com', 'square.site', 'squarecdn.com'] },
-  { name: 'Toast',       patterns: ['toasttab.com'] },
-  { name: 'Clover',      patterns: ['clover.com'] },
-  { name: 'Slice',       patterns: ['slicelife.com'] },
-  { name: 'Lightspeed',  patterns: ['lightspeedrestaurant.com'] },
-  { name: 'TouchBistro', patterns: ['touchbistro.com'] },
-  { name: 'Revel',       patterns: ['revelsystems.com'] },
-  { name: 'Chownow',     patterns: ['chownow.com'] },
-  { name: 'Olo',         patterns: ['olo.com'] },
-];
-
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const delay = ms => new Promise(r => setTimeout(r, ms));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const isChain = name => CHAINS.some(c => name.toLowerCase().includes(c));
+const today = () => new Date().toISOString().slice(0, 10);
 
-async function searchPlaces(query) {
-  const places = [];
-  let pageToken = null;
-
-  do {
-    const body = { textQuery: query, maxResultCount: 20 };
-    if (pageToken) body.pageToken = pageToken;
-
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': API_KEY,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.location,places.types',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-    if (data.error) { console.error(`  API error: ${data.error.message}`); break; }
-    if (data.places) places.push(...data.places);
-    pageToken = data.nextPageToken || null;
-    if (pageToken) await delay(PAGE_DELAY_MS);
-  } while (pageToken);
-
-  return places;
+function usage(message) {
+  if (message) console.error(message + '\n');
+  console.error('Usage: node scraper.js --area <key> [--commit] [--max-requests N] [--no-cache]');
+  console.error('       node scraper.js --import <file.csv> [--commit]');
+  console.error('\nAreas: ' + Object.entries(AREAS).map(([k, a]) => `${k} (${a.label})`).join(', '));
+  console.error('Dry run is the default: results go to a CSV in out/ and nothing is written to the database.');
+  process.exit(1);
 }
 
-async function detectPOS(websiteUrl) {
-  if (!websiteUrl) return null;
-  try {
-    const res = await fetch(websiteUrl, {
-      agent: (url) => url.protocol === 'https:' ? httpsAgent : undefined,
-      signal: AbortSignal.timeout(5000),
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GauchoBot/1.0)' },
-    });
-    const html = await res.text();
-    const lower = html.toLowerCase();
-    for (const { name, patterns } of POS_PATTERNS) {
-      if (patterns.some(p => lower.includes(p))) return name;
-    }
-  } catch {}
-  return null;
+if (!IMPORT_FILE && !AREA_KEY) usage();
+if (AREA_KEY && !AREAS[AREA_KEY]) usage(`Unknown area "${AREA_KEY}".`);
+if (!IMPORT_FILE && !API_KEY) usage('GOOGLE_PLACES_API_KEY is not set.');
+
+// Dry run loads the database module read-only, so no code path here can write
+if (!COMMIT) process.env.CRM_DB_READONLY = '1';
+const db = await import('./db.js');
+
+async function mapLimit(items, limit, fn) {
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) await fn(items[next++]);
+  }));
 }
 
-function extractCity(formattedAddress) {
-  const parts = (formattedAddress || '').split(',').map(s => s.trim());
-  if (parts.length >= 3) return parts[parts.length - 3];
-  if (parts.length >= 2) return parts[parts.length - 2];
-  return '';
+async function loadExisting() {
+  const leads = await db.getAll('leads');
+  const customers = await db.getAll('customers');
+  console.log(`Mode: ${COMMIT ? 'COMMIT — new leads will be written to the database' : 'dry run — nothing is written to the database'}`);
+  console.log(`Existing CRM: ${leads.length} leads, ${customers.length} customers`);
+  if (!process.env.DATABASE_URL) {
+    console.log('  ! DATABASE_URL is not set — comparing against local data/ files, not the live CRM');
+  }
+  return { leads, index: buildIndex(leads, customers) };
 }
 
-async function run() {
-  const seen = new Set();
-  let added = 0, skipped = 0, chains = 0;
-  const today = new Date().toISOString().slice(0, 10);
+async function searchArea(area, client) {
+  const found = new Map();   // place id → { place, query, locality }
 
-  for (const { query, county } of SEARCH_QUERIES) {
-    console.log(`\nSearching: ${query}`);
-    const places = await searchPlaces(query);
-    console.log(`  ${places.length} result(s)`);
-
-    for (const place of places) {
-      if (seen.has(place.id)) { skipped++; continue; }
-      seen.add(place.id);
-
-      const name = place.displayName?.text || '';
-      if (isChain(name)) { chains++; continue; }
-
-      const types = place.types || [];
-      const isPizza = types.includes('pizza_restaurant') || name.toLowerCase().includes('pizza');
-      if (!isPizza) { skipped++; continue; }
-
-      const website = place.websiteUri || null;
-      const pos = await detectPOS(website);
-
-      const inserted = await insertUnique('leads', 'place_id', {
-        id: uid(),
-        name,
-        phone: place.nationalPhoneNumber || null,
-        address: place.formattedAddress || null,
-        city: extractCity(place.formattedAddress || ''),
-        county: county || null,
-        website,
-        pos: pos || null,
-        stage: 'prospect',
-        owner: '',
-        notes: '',
-        place_id: place.id,
-        lat: place.location?.latitude || null,
-        lng: place.location?.longitude || null,
-        added: today,
-      });
-
-      if (inserted) {
-        added++;
-        console.log(`  + ${name}${pos ? ' [' + pos + ']' : ''}`);
-      } else {
-        skipped++;
-        console.log(`  ~ ${name} (already in DB)`);
+  search:
+  for (const locality of area.localities) {
+    for (const phrase of QUERY_PHRASES) {
+      const query = `${phrase} in ${locality} ${area.state}`;
+      const { places, complete, fromCache } = await client.searchText(query, area.bounds);
+      let fresh = 0;
+      for (const place of places) {
+        if (found.has(place.id)) continue;
+        found.set(place.id, { place, query, locality });
+        fresh++;
       }
+      console.log(`  ${query}: ${places.length} result(s), ${fresh} new${fromCache ? ' (cached)' : ''}`);
 
-      await delay(POS_FETCH_DELAY_MS);
+      if (client.stats.budgetHit) {
+        console.log(`\n  ! Request budget of ${MAX_REQUESTS} reached — stopping the search early. Results below are partial.`);
+        break search;
+      }
+      if (!complete || places.length < MAX_RESULTS_PER_QUERY) break;
+      if (!fromCache) await delay(QUERY_DELAY_MS);
     }
-
-    await delay(QUERY_DELAY_MS);
   }
 
-  console.log(`\n─────────────────────────────────`);
-  console.log(`Done. Added: ${added} | Skipped/duplicate: ${skipped} | Chains filtered: ${chains}`);
+  return [...found.values()];
 }
 
-run().catch(console.error);
+function printPlan(plan) {
+  const verb = COMMIT ? 'Writing' : 'Would write';
+  console.log(`\n${verb}: ${plan.inserts.length} new lead(s), ${plan.locationAdds.length} existing lead(s) gaining locations, ${plan.backfills.length} place_id backfill(s)`);
+  if (plan.skipped.length) console.log(`  ${plan.skipped.length} target(s) skipped — already in the CRM`);
+  for (const lead of plan.inserts) {
+    const extra = lead.locations ? ` (+${lead.locations.length} location(s))` : '';
+    console.log(`  + ${lead.name} [${lead.pos}]${extra} — ${lead.city}`);
+  }
+}
+
+async function applyPlan(plan) {
+  let added = 0;
+  for (const lead of plan.inserts) {
+    if (await db.insertUnique('leads', 'place_id', lead)) added++;
+  }
+  for (const { lead, locations } of plan.locationAdds) {
+    await db.update('leads', lead.id, { multi_location: true, locations });
+  }
+  for (const { lead, place_id } of plan.backfills) {
+    await db.update('leads', lead.id, { place_id });
+  }
+  console.log(`\nDatabase updated: ${added} lead(s) added, ${plan.locationAdds.length} lead(s) updated with locations, ${plan.backfills.length} place_id(s) backfilled.`);
+}
+
+async function scrape() {
+  const area = AREAS[AREA_KEY];
+  const { leads, index } = await loadExisting();
+
+  const client = createPlacesClient({
+    apiKey: API_KEY,
+    maxRequests: MAX_REQUESTS,
+    cacheDir: path.join(__dirname, 'data', 'places-cache'),
+    useCache: !flag('--no-cache'),
+  });
+
+  console.log(`\nSearching ${area.label} (${area.localities.length} localities, budget ${MAX_REQUESTS} requests)`);
+  const found = await searchArea(area, client);
+
+  const { rows, groups } = screenPlaces(found, area, index);
+  console.log(`\n${found.length} unique place(s) found. Checking POS for ${groups.length} new shop(s)...`);
+
+  await mapLimit(groups, POS_CONCURRENCY, async group => {
+    const website = group.primary.website || group.members.find(m => m.website)?.website || null;
+    applyDetection(group, await detectPOS(website));
+    const { name, verdict, pos, ordering_provider } = group.primary;
+    console.log(`  ${verdict.padEnd(15)} ${name}${pos ? ` [${pos}]` : ordering_provider ? ` [via ${ordering_provider}]` : ''}`);
+  });
+
+  const outDir = path.join(__dirname, 'out');
+  mkdirSync(outDir, { recursive: true });
+  const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  const csvPath = path.join(outDir, `scrape-${AREA_KEY}-${stamp}.csv`);
+  writeFileSync(csvPath, toCsv(CSV_COLUMNS, rows));
+
+  const counts = {};
+  for (const row of rows) counts[row.verdict] = (counts[row.verdict] || 0) + 1;
+  console.log(`\n─────────────────────────────────`);
+  for (const [verdict, n] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ${String(n).padStart(4)}  ${verdict}`);
+  }
+  const { requests, cacheHits } = client.stats;
+  console.log(`\nPlaces API requests: ${requests} (${cacheHits} quer${cacheHits === 1 ? 'y' : 'ies'} served from cache) — about $${(requests * LIST_PRICE_PER_1000 / 1000).toFixed(2)} at list price`);
+  console.log(`CSV: ${csvPath}`);
+
+  const plan = planWrites(rows, leads, index, today(), uid);
+  printPlan(plan);
+  if (COMMIT) await applyPlan(plan);
+  else console.log('\nDry run — review the CSV, then re-run with --commit or use --import <csv> --commit.');
+}
+
+async function importCsv() {
+  const rows = parseCsv(readFileSync(IMPORT_FILE, 'utf8'));
+  if (!rows.length || !('verdict' in rows[0]) || !('place_id' in rows[0])) {
+    usage(`${IMPORT_FILE} does not look like a scraper CSV (needs verdict and place_id columns).`);
+  }
+  const { leads, index } = await loadExisting();
+  console.log(`\nImporting ${IMPORT_FILE}: ${rows.length} row(s), ${rows.filter(r => r.verdict === 'new_target').length} marked new_target`);
+
+  const plan = planWrites(rows, leads, index, today(), uid);
+  printPlan(plan);
+  if (COMMIT) await applyPlan(plan);
+  else console.log('\nDry run — add --commit to write these to the database.');
+}
+
+(IMPORT_FILE ? importCsv() : scrape())
+  .then(() => process.exit(0))
+  .catch(err => { console.error(err); process.exit(1); });

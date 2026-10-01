@@ -6,6 +6,13 @@ import pg from 'pg';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Set by the scraper's dry run: SELECTs only, every write function throws
+const READ_ONLY = process.env.CRM_DB_READONLY === '1';
+
+function assertWritable() {
+  if (READ_ONLY) throw new Error('[db] read-only mode (dry run) — write refused');
+}
+
 // ── Postgres (Railway) ───────────────────────────────────────────────────
 let pool = null;
 
@@ -13,24 +20,30 @@ if (process.env.DATABASE_URL) {
   pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL.trim(),
     ssl: { rejectUnauthorized: false },
+    // In read-only mode Postgres itself rejects writes on this connection
+    ...(READ_ONLY ? { options: '-c default_transaction_read_only=on' } : {}),
   });
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS crm_leads     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
-      CREATE TABLE IF NOT EXISTS crm_customers (id TEXT PRIMARY KEY, data JSONB NOT NULL);
-      CREATE TABLE IF NOT EXISTS crm_calls     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
-      CREATE TABLE IF NOT EXISTS crm_todos     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
-    `);
-    console.log('DB: Postgres');
-  } catch (err) {
-    console.error('[db] Failed to initialize database:', err.message);
-    process.exit(1);
+  if (READ_ONLY) {
+    console.log('DB: Postgres (read-only)');
+  } else {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS crm_leads     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
+        CREATE TABLE IF NOT EXISTS crm_customers (id TEXT PRIMARY KEY, data JSONB NOT NULL);
+        CREATE TABLE IF NOT EXISTS crm_calls     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
+        CREATE TABLE IF NOT EXISTS crm_todos     (id TEXT PRIMARY KEY, data JSONB NOT NULL);
+      `);
+      console.log('DB: Postgres');
+    } catch (err) {
+      console.error('[db] Failed to initialize database:', err.message);
+      process.exit(1);
+    }
   }
 }
 
 // ── JSON files (local) ───────────────────────────────────────────────────
 const DATA_DIR = path.join(__dirname, 'data');
-if (!pool && !existsSync(DATA_DIR)) mkdirSync(DATA_DIR);
+if (!pool && !READ_ONLY && !existsSync(DATA_DIR)) mkdirSync(DATA_DIR);
 
 function jsonLoad(table) {
   try { return JSON.parse(readFileSync(path.join(DATA_DIR, table + '.json'), 'utf8')); } catch { return []; }
@@ -49,6 +62,7 @@ export async function getAll(table) {
 }
 
 export async function insert(table, row) {
+  assertWritable();
   if (pool) {
     await pool.query(`INSERT INTO crm_${table} (id, data) VALUES ($1, $2)`, [row.id, row]);
   } else {
@@ -60,6 +74,7 @@ export async function insert(table, row) {
 }
 
 export async function insertUnique(table, uniqueField, row) {
+  assertWritable();
   if (pool) {
     const check = await pool.query(
       `SELECT id FROM crm_${table} WHERE data->>'${uniqueField}' = $1`,
@@ -78,6 +93,7 @@ export async function insertUnique(table, uniqueField, row) {
 }
 
 export async function update(table, id, changes) {
+  assertWritable();
   if (pool) {
     const res = await pool.query(
       `UPDATE crm_${table} SET data = data || $1 WHERE id = $2 RETURNING data`,
@@ -95,6 +111,7 @@ export async function update(table, id, changes) {
 }
 
 export async function remove(table, id) {
+  assertWritable();
   if (pool) {
     await pool.query(`DELETE FROM crm_${table} WHERE id = $1`, [id]);
   } else {
