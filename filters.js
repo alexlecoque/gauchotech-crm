@@ -8,7 +8,7 @@ const CHAINS = [
   'mod pizza', 'blaze pizza', 'pieology', 'mountain mikes', 'marcos pizza', 'jets pizza', 'hungry howies',
   'chuck e cheese', 'california pizza kitchen', 'shakeys', 'numero uno', 'ameci', 'fresh brothers',
   'big mamas and papas', 'zpizza', 'z pizza', 'pitfire', 'straw hat', 'costco',
-  'olive garden', 'buca di beppo', 'north italia', 'slice house by tony gemignani',
+  'olive garden', 'buca di beppo', 'north italia', 'slice house by tony gemignani', 'pizza man',
 ];
 
 // A name seen this many times in one run is probably a chain we don't know about

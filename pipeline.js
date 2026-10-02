@@ -171,7 +171,7 @@ function posNote(row) {
   const pos = text(row.pos);
   if (!pos || pos === 'Unknown') {
     const via = text(row.ordering_provider);
-    return `POS unknown — ask on the call.${via ? ` Orders online via ${via}${text(row.ordering_url) ? ` (${row.ordering_url})` : ''}.` : ''}`;
+    return `POS unknown — ask on the call.${via ? ` Orders online via ${via}.` : ''}`;
   }
   return `POS: ${pos} (${text(row.pos_confidence) || 'unrated'} confidence). Evidence: ${text(row.pos_evidence) || 'none recorded'}`;
 }
