@@ -13,7 +13,7 @@ import { chainMatch, notPizzaReason, SUSPECTED_CHAIN_MIN } from './filters.js';
 //   excluded_chain / not_pizza / closed
 export const CSV_COLUMNS = [
   'verdict', 'reason', 'name', 'address', 'city', 'zip', 'area', 'county', 'phone', 'website',
-  'pos', 'pos_confidence', 'pos_evidence', 'ordering_provider', 'ordering_url', 'signals',
+  'pos', 'pos_confidence', 'pos_evidence', 'pos_method', 'pos_conflict', 'ordering_provider', 'ordering_url', 'signals',
   'pages_checked', 'fetch_error', 'match_rule', 'matched_type', 'matched_lead_id', 'matched_name',
   'primary_place_id', 'location_count', 'place_id', 'google_maps_url', 'primary_type',
   'business_status', 'rating_count', 'lat', 'lng', 'query',
@@ -69,17 +69,17 @@ export function screenPlaces(found, area, index) {
     rows.push(row);
 
     const match = findMatch(index, row);
-    if (match) {
-      Object.assign(row, {
-        verdict: match.kind,
-        reason: match.kind === 'duplicate'
-          ? `already in CRM as ${match.type} "${match.record.name}" (matched on ${match.rule})`
-          : `another location of ${match.type} "${match.record.name}" (matched on ${match.rule})`,
-        match_rule: match.rule, matched_type: match.type,
-        matched_lead_id: match.record.id, matched_name: match.record.name,
-      });
-      continue;
-    }
+    const applyMatch = () => Object.assign(row, {
+      verdict: match.kind,
+      reason: match.kind === 'duplicate'
+        ? `already in CRM as ${match.type} "${match.record.name}" (matched on ${match.rule})`
+        : `another location of ${match.type} "${match.record.name}" (matched on ${match.rule})`,
+      match_rule: match.rule, matched_type: match.type,
+      matched_lead_id: match.record.id, matched_name: match.record.name,
+    });
+
+    // The exact shop already in the CRM is a duplicate whatever it is
+    if (match?.kind === 'duplicate') { applyMatch(); continue; }
 
     if (item.place.businessStatus === 'CLOSED_PERMANENTLY') {
       Object.assign(row, { verdict: 'closed', reason: 'permanently closed on Google' });
@@ -89,6 +89,10 @@ export function screenPlaces(found, area, index) {
     if (chain) { Object.assign(row, { verdict: 'excluded_chain', reason: `chain: ${chain}` }); continue; }
     const notPizza = notPizzaReason(item.place);
     if (notPizza) { Object.assign(row, { verdict: 'not_pizza', reason: notPizza }); continue; }
+
+    // Only after the filters: a chain or non-pizza lead left in the CRM by an older run
+    // must not collect every other branch of that brand as an extra location
+    if (match) { applyMatch(); continue; }
 
     pending.push(row);
   }
@@ -128,6 +132,8 @@ export function applyDetection(group, det) {
     pos: det.pos,
     pos_confidence: det.confidence,
     pos_evidence: det.evidenceUrl,
+    pos_method: det.method,
+    pos_conflict: det.conflict,
     ordering_provider: det.orderingProvider,
     ordering_url: det.orderingUrl,
     signals: det.signals.join(' | '),
@@ -159,6 +165,17 @@ export function applyDetection(group, det) {
 const num = v => (v === '' || v == null ? null : Number(v));
 const text = v => (v === '' || v == null ? null : v);
 
+// A lead's notes start with how sure we are of its POS and where that came from.
+// A reviewed CSV can carry its own `notes` column instead.
+function posNote(row) {
+  const pos = text(row.pos);
+  if (!pos || pos === 'Unknown') {
+    const via = text(row.ordering_provider);
+    return `POS unknown — ask on the call.${via ? ` Orders online via ${via}${text(row.ordering_url) ? ` (${row.ordering_url})` : ''}.` : ''}`;
+  }
+  return `POS: ${pos} (${text(row.pos_confidence) || 'unrated'} confidence). Evidence: ${text(row.pos_evidence) || 'none recorded'}`;
+}
+
 const toLocation = row => ({
   place_id: row.place_id, address: text(row.address), city: text(row.city), phone: text(row.phone),
   lat: num(row.lat), lng: num(row.lng),
@@ -181,7 +198,7 @@ function buildLead(row, locationRows, today, uid) {
     pos_checked: today,
     stage: 'prospect',
     owner: '',
-    notes: '',
+    notes: text(row.notes) || posNote(row),
     place_id: row.place_id,
     lat: num(row.lat),
     lng: num(row.lng),

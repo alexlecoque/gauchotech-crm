@@ -14,7 +14,7 @@ import { toCsv, parseCsv } from './csv.js';
 //   node scraper.js --area sfv --commit        same, and write new leads to the database
 //   node scraper.js --import out/file.csv      show what a reviewed CSV would write (no Google calls)
 //   node scraper.js --import out/file.csv --commit
-// Options: --max-requests N (default 250)   --no-cache (ignore saved search results)
+// Options: --max-requests N (default 250; 0 = cached searches only)   --no-cache (ignore saved search results)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
@@ -31,7 +31,9 @@ const option = name => { const i = args.indexOf(name); return i !== -1 ? args[i 
 const COMMIT = flag('--commit');
 const AREA_KEY = option('--area');
 const IMPORT_FILE = option('--import');
-const MAX_REQUESTS = Number(option('--max-requests')) || DEFAULT_MAX_REQUESTS;
+// --max-requests 0 is valid: run from the search cache only, never call Places
+const MAX_REQUESTS = option('--max-requests') != null && Number.isFinite(Number(option('--max-requests')))
+  ? Number(option('--max-requests')) : DEFAULT_MAX_REQUESTS;
 
 const delay = ms => new Promise(r => setTimeout(r, ms));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -143,7 +145,7 @@ async function scrape() {
 
   await mapLimit(groups, POS_CONCURRENCY, async group => {
     const website = group.primary.website || group.members.find(m => m.website)?.website || null;
-    applyDetection(group, await detectPOS(website));
+    applyDetection(group, await detectPOS(website, { shop: group.primary }));
     const { name, verdict, pos, ordering_provider } = group.primary;
     console.log(`  ${verdict.padEnd(15)} ${name}${pos ? ` [${pos}]` : ordering_provider ? ` [via ${ordering_provider}]` : ''}`);
   });

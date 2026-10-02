@@ -36,7 +36,7 @@ Railway project: `reasonable-wholeness` (separate from the GauchoTech Vapi serve
 
 ## Scraper
 
-Finds independent pizza shops that run Square or Clover. Searches Google Places API (New) by area, skips anything already in the CRM, follows each shop's "order online" link to detect the POS, and records the evidence URL.
+Finds independent pizza shops that run Square or Clover. Searches Google Places API (New) by area, skips anything already in the CRM, reads each shop's website (order, menu, contact and footer pages, embedded widgets) to detect the POS, and records the evidence URL.
 
 **Dry run is the default** — results go to a CSV in `out/` and nothing is written to the database.
 
@@ -47,9 +47,9 @@ npm run scrape -- --import out/<file>.csv       # show what a reviewed CSV would
 npm run scrape -- --import out/<file>.csv --commit
 ```
 
-Options: `--max-requests N` (Places request budget, default 250), `--no-cache` (search results are cached in `data/places-cache/` for 30 days, so re-runs cost no Places calls).
+Options: `--max-requests N` (Places request budget, default 250; `0` runs from the search cache only and never calls Places), `--no-cache` (search results are cached in `data/places-cache/` for 30 days, so re-runs cost no Places calls).
 
-**Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
+**Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `browser.js` (headless Chrome fallback for sites that block plain fetches), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
 
 **Areas** (`areas.js`): `sfv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
 
@@ -62,9 +62,11 @@ Options: `--max-requests N` (Places request budget, default 250), `--no-cache` (
 
 **Dedupe:** matched against existing leads and customers by `place_id`, then phone, then name + address. Another location of a business already in the CRM (shared phone, or same name + website) is added to that lead's `locations` instead of becoming a new lead.
 
-**CSV verdicts:** `new_target` (Square/Clover — the only rows written on `--commit`), `unknown_pos`, `excluded_pos`, `suspected_chain`, `extra_location`, `duplicate`, `excluded_chain`, `not_pizza`, `closed`. To promote a row by hand, change its verdict to `new_target` in the CSV and `--import` it.
+**CSV verdicts:** `new_target` (Square/Clover — the only rows written on `--commit`), `unknown_pos`, `excluded_pos`, `suspected_chain`, `extra_location`, `duplicate`, `excluded_chain`, `not_pizza`, `closed`. To promote a row by hand, change its verdict to `new_target` in the CSV and `--import` it (set `pos` to `Unknown` for a shop whose POS is not known). Each new lead's notes start with the POS confidence and evidence URL; a `notes` column in the CSV overrides that.
 
-**POS systems detected:** Square, Clover (targets); Toast, SpotOn, Adora, Lightspeed, TouchBistro, Revel (excluded). Slice, ChowNow, Olo and DoorDash Storefront are ordering layers, not POS — those shops are reported as `unknown_pos`.
+**POS systems detected:** Square, Clover (targets); Toast, SpotOn, Adora, Lightspeed, TouchBistro, Revel, HungerRush, SkyTab, Rezku and others (excluded) — see `PROVIDERS` in `pos.js`. Slice, ChowNow, Olo, DoorDash Storefront, Owner.com, Menufy, Orders.co, Blizzfull and similar are ordering layers, not POS — those shops are reported as `unknown_pos`.
+
+**How a POS is confirmed:** a Square or Clover ordering page only counts in full when its address or phone matches the shop (a link to a sister restaurant's page does not). When the website shows no POS, the Square and Clover addresses the shop would have are tried by name and counted only on an address or name + city match. `pos_confidence` is `strong` when the matching page is taking orders, `medium` when ordering is switched off there (a merchant account that may be left over from an earlier POS — ask on the call; some shops pause ordering after hours, so run during opening hours), `conflict` when two POS tie; `pos_conflict` lists the other evidence. Sites that refuse a plain fetch are retried with a browser user agent, then read through headless Chrome (needs Google Chrome installed; skipped otherwise).
 
 **Chains filtered out automatically:** see `CHAINS` in `filters.js`. A name that appears 4+ times in one run is flagged `suspected_chain`.
 

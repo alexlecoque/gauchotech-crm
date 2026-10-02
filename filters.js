@@ -8,6 +8,7 @@ const CHAINS = [
   'mod pizza', 'blaze pizza', 'pieology', 'mountain mikes', 'marcos pizza', 'jets pizza', 'hungry howies',
   'chuck e cheese', 'california pizza kitchen', 'shakeys', 'numero uno', 'ameci', 'fresh brothers',
   'big mamas and papas', 'zpizza', 'z pizza', 'pitfire', 'straw hat', 'costco',
+  'olive garden', 'buca di beppo', 'north italia', 'slice house by tony gemignani',
 ];
 
 // A name seen this many times in one run is probably a chain we don't know about
@@ -22,6 +23,10 @@ const NON_PIZZA_TYPES = [
 ];
 
 const NON_PIZZA_NAME = /\b(brewery|brewing|brewpub|brewhouse|taproom|tap room|tavern|pub|saloon|sports bar|bar and grill)\b/;
+
+// Primary types that say nothing against pizza: when Google also lists a pizza type
+// further down, the place is kept (an Italian restaurant that is mostly pizza)
+const PIZZA_FRIENDLY_PRIMARY = ['', 'restaurant', 'italian_restaurant', 'meal_takeaway', 'meal_delivery'];
 
 export function chainMatch(name) {
   const norm = ` ${normName(name)} `;
@@ -38,10 +43,14 @@ export function notPizzaReason(place) {
   if (word) return `name contains "${word[1]}"`;
 
   if (PIZZA_TYPES.includes(primary)) return null;
-  const pizzaName = /\b(pizza|pizzas|pizzeria)\b/.test(name);
+  const types = place.types || [];
+  // "pizz…" also covers pizzeria, pizzas and spellings like "Pizzah"
+  const pizzaName = /\bpizz[a-z]*\b/.test(name);
   const restaurantType = !primary || primary === 'restaurant' || primary.endsWith('_restaurant')
     || primary === 'meal_takeaway' || primary === 'meal_delivery';
-  if (pizzaName && restaurantType) return null;
+  // Any food business with pizza in its name counts ("Glenoaks Deli & Pizza" is a sandwich_shop)
+  if (pizzaName && (restaurantType || types.includes('food'))) return null;
+  if (types.some(t => PIZZA_TYPES.includes(t)) && PIZZA_FRIENDLY_PRIMARY.includes(primary)) return null;
 
   return pizzaName ? `primary type is ${primary}` : `primary type is ${primary || 'unknown'} and no pizza in name`;
 }
