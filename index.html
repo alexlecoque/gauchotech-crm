@@ -407,7 +407,9 @@
     </div>
     <div class="form-row"><label>Restaurant *</label><input id="ca-rest" placeholder="e.g. Californo Pizza"></div>
     <div class="form-row"><label>Contact name</label><input id="ca-contact" placeholder="e.g. Alberto"></div>
-    <div class="form-row"><label>Date</label><input id="ca-date" type="date"></div>
+    <div class="form-row"><label>Date &amp; time of call</label>
+      <div style="display:flex;gap:8px"><input id="ca-date" type="date"><input id="ca-time" type="time"><button type="button" class="btn" style="white-space:nowrap" onclick="stampNow()">Now</button></div>
+    </div>
     <div class="form-row"><label>Direction</label>
       <select id="ca-dir">
         <option value="outbound">Outbound</option>
@@ -779,6 +781,17 @@ function renderDialList(filtered) {
 const DISP_LABELS = { connected: 'Connected', gatekeeper: 'Gatekeeper', no_connect: 'No connect', follow_up: 'Follow up', not_interested: 'Not interested' };
 let selectedDisp = null;
 
+function stampNow() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  document.getElementById('ca-date').value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  document.getElementById('ca-time').value = `${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fmtWhen(c) {
+  if (!c.time) return c.date || '';
+  const [h, m] = c.time.split(':').map(Number);
+  return `${c.date || ''} ${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
 function pickDisp(d) {
   selectedDisp = d;
   document.querySelectorAll('#ca-disp .disp-btn').forEach(b => b.classList.toggle('sel', b.dataset.d === d));
@@ -787,7 +800,7 @@ function pickDisp(d) {
 // Calls belong to a lead by leadId; older calls fall back to restaurant name.
 function callsForLead(l) {
   return calls.filter(c => c.leadId ? c.leadId === l.id : c.restaurant === l.name)
-    .sort((a, b) => (b.loggedAt || b.date || '').localeCompare(a.loggedAt || a.date || ''));
+    .sort((a, b) => ((b.date || '') + (b.time || '') + (b.loggedAt || '')).localeCompare((a.date || '') + (a.time || '') + (a.loggedAt || '')));
 }
 
 function dispPill(d) {
@@ -798,7 +811,7 @@ function dialListCallSummary(l) {
   const matches = callsForLead(l);
   if (!matches.length) return '—';
   const last = matches[0];
-  return `${matches.length}&times; ${dispPill(last.disposition)} <span style="color:var(--color-text-secondary);font-size:11px">${last.date || ''}</span>`;
+  return `${matches.length}&times; ${dispPill(last.disposition)} <span style="color:var(--color-text-secondary);font-size:11px">${fmtWhen(last)}</span>`;
 }
 
 function openLeadDetail(id) {
@@ -822,7 +835,7 @@ function openLeadDetail(id) {
     ${hist.length ? hist.map(c => `
       <div class="call-item">
         ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
-        <span class="when">${c.date || ''}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        <span class="when">${fmtWhen(c)}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'}
   `;
@@ -868,7 +881,7 @@ function openAccount(id) {
     ${hist.length ? hist.map(c => `
       <div class="call-item">
         ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
-        <span class="when">${c.date || ''}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        <span class="when">${fmtWhen(c)}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary);padding:10px 0">No calls logged yet</div>'}
     </div>`;
@@ -883,7 +896,7 @@ function logCallForLead(id) {
   pickDisp(null);
   document.getElementById('ca-rest').value = l.name;
   document.getElementById('ca-contact').value = l.owner || '';
-  document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10);
+  stampNow();
   document.getElementById('ca-dir').value = 'outbound';
   document.getElementById('ca-dur').value = '';
   document.getElementById('ca-outcome').value = '';
@@ -1004,7 +1017,7 @@ function renderMap() {
 }
 
 function openModal(type) {
-  if (type === 'call' && !document.getElementById('modal-call').classList.contains('open')) { if (!callingLeadId) pickDisp(null); document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10); }
+  if (type === 'call' && !document.getElementById('modal-call').classList.contains('open')) { if (!callingLeadId) pickDisp(null); stampNow(); }
   document.getElementById('modal-' + type).classList.add('open');
 }
 function closeModal(type) { if (type === 'call') callingLeadId = null; document.getElementById('modal-' + type).classList.remove('open'); }
@@ -1099,6 +1112,7 @@ async function saveCall() {
     disposition: selectedDisp,
     contact: document.getElementById('ca-contact').value.trim(),
     date: document.getElementById('ca-date').value,
+    time: document.getElementById('ca-time').value,
     direction: document.getElementById('ca-dir').value,
     duration: document.getElementById('ca-dur').value.trim(),
     outcome: document.getElementById('ca-outcome').value.trim(),
