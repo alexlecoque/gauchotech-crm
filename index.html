@@ -425,11 +425,11 @@
 </div>
 
 <!-- MODAL: LEAD DETAIL -->
-<div class="modal-overlay" id="modal-lead">
+<div class="modal-overlay" id="modal-account">
   <div class="modal-box" style="max-width:560px">
     <div id="lead-detail-content"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeModal('lead')">Close</button>
+      <button class="btn" onclick="closeModal('account')">Close</button>
       <button class="btn" id="lead-detail-full">Open full history →</button>
       <button class="btn primary" id="lead-detail-log">Log call</button>
     </div>
@@ -525,6 +525,8 @@ function makeCard(l, col, stage) {
     <button class="card-edit-btn">Edit</button>
   `;
   card.querySelector('.card-edit-btn').addEventListener('click', e => { e.stopPropagation(); openEditModal(l.id); });
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', () => openLeadDetail(l.id));
   card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', l.id); setTimeout(() => card.classList.add('dragging'), 0); });
   card.addEventListener('dragend', () => card.classList.remove('dragging'));
   col.appendChild(card);
@@ -758,18 +760,18 @@ function renderDialList(filtered) {
     return av < bv ? -dir : av > bv ? dir : 0;
   });
   document.getElementById('browse-list-tbody').innerHTML = sorted.map(l => `
-    <tr>
-      <td><a href="#" style="font-weight:500" onclick="openLeadDetail('${l.id}');return false">${l.name}</a></td>
+    <tr style="cursor:pointer" onclick="openLeadDetail('${l.id}')">
+      <td><a href="#" style="font-weight:500" onclick="event.stopPropagation();openLeadDetail('${l.id}');return false">${l.name}</a></td>
       <td>${l.owner || '—'}</td>
       <td>${l.role || '—'}</td>
-      <td>${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}">${l.phone}</a>` : '—'}</td>
+      <td>${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}" onclick="event.stopPropagation()">${l.phone}</a>` : '—'}</td>
       <td>${l.city || '—'}</td>
       <td><span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span></td>
       <td>${l.website ? `<a href="${l.website}" target="_blank" rel="noopener">Site ↗</a>` : '—'}</td>
       <td>${dialListCallSummary(l)}</td>
       <td>
-        <button class="card-edit-btn" onclick="logCallForLead('${l.id}')">Log call</button>
-        <button class="card-edit-btn" onclick="openEditModal('${l.id}')">Edit</button>
+        <button class="card-edit-btn" onclick="event.stopPropagation();logCallForLead('${l.id}')">Log call</button>
+        <button class="card-edit-btn" onclick="event.stopPropagation();openEditModal('${l.id}')">Edit</button>
       </td>
     </tr>`).join('');
 }
@@ -824,9 +826,9 @@ function openLeadDetail(id) {
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'}
   `;
-  document.getElementById('lead-detail-full').onclick = () => { closeModal('lead'); openAccount(id); };
-  document.getElementById('lead-detail-log').onclick = () => { closeModal('lead'); logCallForLead(id); };
-  document.getElementById('modal-lead').classList.add('open');
+  document.getElementById('lead-detail-full').onclick = () => { closeModal('account'); openAccount(id); };
+  document.getElementById('lead-detail-log').onclick = () => { closeModal('account'); logCallForLead(id); };
+  document.getElementById('modal-account').classList.add('open');
 }
 
 let accountLeadId = null;
@@ -922,12 +924,12 @@ function renderBrowse() {
             <span class="caret">▶</span><span>${city}</span><span class="badge">${cityLeads.length}</span>
           </div>
           <div class="city-body" style="display:none">${cityLeads.map(l => `
-            <div class="browse-row">
+            <div class="browse-row" style="cursor:pointer" onclick="openLeadDetail('${l.id}')">
               <a href="#" class="browse-name" onclick="openLeadDetail('${l.id}');return false">${l.name}</a>
               ${l.phone ? `<span class="browse-phone">${l.phone}</span>` : ''}
               ${l.pos ? `<span class="browse-pos">${l.pos}</span>` : ''}
               <span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span>
-              <button class="card-edit-btn" onclick="openEditModal('${l.id}')">Edit</button>
+              <button class="card-edit-btn" onclick="event.stopPropagation();openEditModal('${l.id}')">Edit</button>
             </div>`).join('')}
           </div>
         </div>`;
