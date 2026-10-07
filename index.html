@@ -186,6 +186,7 @@
     <button class="tab" onclick="showTab('map')">Map</button>
     <button class="tab" onclick="showTab('customers')">Customers</button>
     <button class="tab" onclick="showTab('calls')">Call log</button>
+    <button class="tab" onclick="showTab('followups')">Follow-ups <span class="badge" id="fu-badge" style="display:none"></span></button>
     <button class="tab" onclick="showTab('tasks')">Action Tasks</button>
   </div>
 
@@ -276,6 +277,15 @@
     <table>
       <thead><tr><th>Date</th><th>Restaurant</th><th>Contact</th><th>Direction</th><th>Duration</th><th>Outcome</th><th></th></tr></thead>
       <tbody id="calls-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- FOLLOW-UPS -->
+  <div class="section" id="sec-followups">
+    <div class="toolbar"><span class="toolbar-label" id="fu-count"></span></div>
+    <table>
+      <thead><tr><th>Follow up on</th><th>Restaurant</th><th>Contact</th><th>Phone</th><th>Last note</th><th></th></tr></thead>
+      <tbody id="fu-tbody"></tbody>
     </table>
   </div>
 
@@ -405,6 +415,7 @@
         <button type="button" class="disp-btn" data-d="not_interested" onclick="pickDisp('not_interested')">Not interested<br><span style="font-size:10px;color:var(--color-text-secondary)">said no</span></button>
       </div>
     </div>
+    <div class="form-row" id="ca-fu-row" style="display:none"><label>Follow-up date *</label><input id="ca-fu" type="date"></div>
     <div class="form-row"><label>Restaurant *</label><input id="ca-rest" placeholder="e.g. Californo Pizza"></div>
     <div class="form-row"><label>Contact name</label><input id="ca-contact" placeholder="e.g. Alberto"></div>
     <div class="form-row"><label>Date &amp; time of call</label>
@@ -496,6 +507,7 @@ async function init() {
   renderPipeline();
   renderCustomers();
   renderCalls();
+  renderFollowups();
   renderTasks();
 }
 
@@ -795,12 +807,20 @@ function fmtWhen(c) {
 function pickDisp(d) {
   selectedDisp = d;
   document.querySelectorAll('#ca-disp .disp-btn').forEach(b => b.classList.toggle('sel', b.dataset.d === d));
+  document.getElementById('ca-fu-row').style.display = d === 'follow_up' ? '' : 'none';
+  if (d === 'follow_up' && !document.getElementById('ca-fu').value) {
+    const t = new Date(); t.setDate(t.getDate() + 2);
+    document.getElementById('ca-fu').value = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  } else if (d !== 'follow_up') document.getElementById('ca-fu').value = '';
 }
+
+// Chronological sort key: date, then time (untimed = midnight), then save time.
+const callKey = c => `${c.date || ''} ${c.time || '00:00'} ${c.loggedAt || ''}`;
 
 // Calls belong to a lead by leadId; older calls fall back to restaurant name.
 function callsForLead(l) {
   return calls.filter(c => c.leadId ? c.leadId === l.id : c.restaurant === l.name)
-    .sort((a, b) => ((b.date || '') + (b.time || '') + (b.loggedAt || '')).localeCompare((a.date || '') + (a.time || '') + (a.loggedAt || '')));
+    .sort((a, b) => callKey(b).localeCompare(callKey(a)));
 }
 
 function dispPill(d) {
@@ -836,12 +856,47 @@ function openLeadDetail(id) {
       <div class="call-item">
         ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
         <span class="when">${fmtWhen(c)}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        ${c.followUpDate ? `<div class="note" style="color:var(--color-text-secondary)">Follow up on ${c.followUpDate}</div>` : ''}
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'}
   `;
   document.getElementById('lead-detail-full').onclick = () => { closeModal('account'); openAccount(id); };
   document.getElementById('lead-detail-log').onclick = () => { closeModal('account'); logCallForLead(id); };
   document.getElementById('modal-account').classList.add('open');
+}
+
+function localToday() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// A lead has an open follow-up when its most recent call was a follow-up with a date.
+// Logging any later call on that lead closes it.
+function openFollowUps() {
+  return leads.map(l => ({ l, last: callsForLead(l)[0] }))
+    .filter(x => x.last && x.last.disposition === 'follow_up' && x.last.followUpDate)
+    .sort((a, b) => a.last.followUpDate.localeCompare(b.last.followUpDate));
+}
+
+function renderFollowups() {
+  const items = openFollowUps(), t = localToday();
+  const due = items.filter(x => x.last.followUpDate <= t).length;
+  const badge = document.getElementById('fu-badge');
+  badge.style.display = due ? '' : 'none';
+  badge.textContent = due;
+  document.getElementById('fu-count').textContent = `${items.length} open follow-up${items.length === 1 ? '' : 's'}${due ? ` · ${due} due` : ''}`;
+  document.getElementById('fu-tbody').innerHTML = items.length ? items.map(({ l, last }) => {
+    const d = last.followUpDate;
+    const tag = d < t ? '<span class="pill pill-not_interested">Overdue</span> ' : d === t ? '<span class="pill pill-gatekeeper">Today</span> ' : '';
+    return `<tr style="cursor:pointer" onclick="openLeadDetail('${l.id}')">
+      <td style="white-space:nowrap">${tag}${d}</td>
+      <td style="font-weight:500">${l.name}</td>
+      <td>${l.owner || '—'}</td>
+      <td>${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}" onclick="event.stopPropagation()">${l.phone}</a>` : '—'}</td>
+      <td style="max-width:220px">${last.outcome || '—'}</td>
+      <td><button class="card-edit-btn" onclick="event.stopPropagation();logCallForLead('${l.id}')">Log call</button></td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="6">No follow-ups scheduled. Pick "Follow up" when logging a call.</td></tr>';
 }
 
 let accountLeadId = null;
@@ -882,6 +937,7 @@ function openAccount(id) {
       <div class="call-item">
         ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
         <span class="when">${fmtWhen(c)}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        ${c.followUpDate ? `<div class="note" style="color:var(--color-text-secondary)">Follow up on ${c.followUpDate}</div>` : ''}
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary);padding:10px 0">No calls logged yet</div>'}
     </div>`;
@@ -958,11 +1014,12 @@ function toggleEl(body, caret) {
 }
 
 function showTab(t) {
-  document.querySelectorAll('.tab').forEach((el, i) => { el.classList.toggle('active', ['browse', 'pipeline', 'map', 'customers', 'calls', 'tasks'][i] === t); });
+  document.querySelectorAll('.tab').forEach((el, i) => { el.classList.toggle('active', ['browse', 'pipeline', 'map', 'customers', 'calls', 'followups', 'tasks'][i] === t); });
   document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
   document.getElementById('sec-' + t).classList.add('active');
   if (t === 'browse') renderBrowse();
   if (t === 'map') renderMap();
+  if (t === 'followups') renderFollowups();
   if (t === 'tasks') renderTasks();
 }
 
@@ -1106,6 +1163,7 @@ async function saveCustomer() {
 async function saveCall() {
   const rest = document.getElementById('ca-rest').value.trim();
   if (!rest) return;
+  if (selectedDisp === 'follow_up' && !document.getElementById('ca-fu').value) { alert('Pick a follow-up date.'); return; }
   const call = await api('/api/calls', 'POST', {
     restaurant: rest,
     leadId: callingLeadId,
@@ -1113,6 +1171,7 @@ async function saveCall() {
     contact: document.getElementById('ca-contact').value.trim(),
     date: document.getElementById('ca-date').value,
     time: document.getElementById('ca-time').value,
+    followUpDate: document.getElementById('ca-fu').value,
     direction: document.getElementById('ca-dir').value,
     duration: document.getElementById('ca-dur').value.trim(),
     outcome: document.getElementById('ca-outcome').value.trim(),
@@ -1127,6 +1186,7 @@ async function saveCall() {
   renderStats();
   if (browseView === 'list') renderBrowse();
   if (document.getElementById('sec-account').classList.contains('active')) openAccount(accountLeadId);
+  renderFollowups();
 }
 
 let draggingTodoId = null;
