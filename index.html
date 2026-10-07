@@ -108,12 +108,14 @@
   .pill-out{background:#fff8e6;color:#7a5800}
   .pill-missed{background:#fdf0f0;color:#a32d2d}
 
-  .disp-row{display:flex;gap:8px}
-  .disp-btn{flex:1;padding:10px 6px;font-size:12px;border:1px solid var(--color-border-secondary);border-radius:var(--radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;font-family:var(--font)}
+  .disp-row{display:flex;flex-wrap:wrap;gap:8px}
+  .disp-btn{flex:1 1 30%;padding:10px 6px;font-size:12px;border:1px solid var(--color-border-secondary);border-radius:var(--radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;font-family:var(--font)}
   .disp-btn:hover{background:var(--color-bg-secondary)}
   .disp-btn.sel{border-color:var(--color-accent);background:var(--color-bg-secondary);font-weight:600}
   .pill-connected{background:#e3f4e8;color:#1d6b35}
   .pill-gatekeeper{background:#fff8e6;color:#7a5800}
+  .pill-follow_up{background:#e6f0ff;color:#003660}
+  .pill-not_interested{background:#fdf0f0;color:#a32d2d}
   .pill-no_connect{background:#f0f2f7;color:#5a6e85}
   .call-item{border-top:0.5px solid var(--color-border-tertiary);padding:10px 0;font-size:13px}
   .call-item .when{font-size:11px;color:var(--color-text-secondary);margin-left:8px}
@@ -277,6 +279,12 @@
     </table>
   </div>
 
+  <!-- ACCOUNT (full call history) -->
+  <div class="section" id="sec-account">
+    <button class="back-btn" onclick="showTab('browse')">← Back to dial list</button>
+    <div id="account-content"></div>
+  </div>
+
   <!-- TASKS -->
   <div class="section" id="sec-tasks">
     <div class="toolbar">
@@ -393,6 +401,8 @@
         <button type="button" class="disp-btn" data-d="connected" onclick="pickDisp('connected')">Connected<br><span style="font-size:10px;color:var(--color-text-secondary)">spoke to decision maker</span></button>
         <button type="button" class="disp-btn" data-d="gatekeeper" onclick="pickDisp('gatekeeper')">Gatekeeper<br><span style="font-size:10px;color:var(--color-text-secondary)">staff / not the owner</span></button>
         <button type="button" class="disp-btn" data-d="no_connect" onclick="pickDisp('no_connect')">No connect<br><span style="font-size:10px;color:var(--color-text-secondary)">VM / no answer</span></button>
+        <button type="button" class="disp-btn" data-d="follow_up" onclick="pickDisp('follow_up')">Follow up<br><span style="font-size:10px;color:var(--color-text-secondary)">call back later</span></button>
+        <button type="button" class="disp-btn" data-d="not_interested" onclick="pickDisp('not_interested')">Not interested<br><span style="font-size:10px;color:var(--color-text-secondary)">said no</span></button>
       </div>
     </div>
     <div class="form-row"><label>Restaurant *</label><input id="ca-rest" placeholder="e.g. Californo Pizza"></div>
@@ -420,6 +430,7 @@
     <div id="lead-detail-content"></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('lead')">Close</button>
+      <button class="btn" id="lead-detail-full">Open full history →</button>
       <button class="btn primary" id="lead-detail-log">Log call</button>
     </div>
   </div>
@@ -763,7 +774,7 @@ function renderDialList(filtered) {
     </tr>`).join('');
 }
 
-const DISP_LABELS = { connected: 'Connected', gatekeeper: 'Gatekeeper', no_connect: 'No connect' };
+const DISP_LABELS = { connected: 'Connected', gatekeeper: 'Gatekeeper', no_connect: 'No connect', follow_up: 'Follow up', not_interested: 'Not interested' };
 let selectedDisp = null;
 
 function pickDisp(d) {
@@ -813,8 +824,52 @@ function openLeadDetail(id) {
         ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
       </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'}
   `;
+  document.getElementById('lead-detail-full').onclick = () => { closeModal('lead'); openAccount(id); };
   document.getElementById('lead-detail-log').onclick = () => { closeModal('lead'); logCallForLead(id); };
   document.getElementById('modal-lead').classList.add('open');
+}
+
+let accountLeadId = null;
+
+function openAccount(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  accountLeadId = id;
+  const hist = callsForLead(l);
+  const counts = {};
+  hist.forEach(c => { if (c.disposition) counts[c.disposition] = (counts[c.disposition] || 0) + 1; });
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('sec-account').classList.add('active');
+  document.getElementById('account-content').innerHTML = `
+    <div class="detail-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar">${(l.name || '?').slice(0, 1).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:600">${l.name}</div>
+          <div style="font-size:13px;color:var(--color-text-secondary)">${[l.owner, l.role, l.city].filter(Boolean).join(' · ')}</div>
+        </div>
+        <span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span>
+        <button class="btn primary" onclick="logCallForLead('${l.id}')">Log call</button>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-key">Phone</div><div class="detail-val">${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}">${l.phone}</a>` : '—'}</div>
+        <div class="detail-key">Website</div><div class="detail-val">${l.website ? `<a href="${l.website}" target="_blank" rel="noopener">${l.website}</a>` : '—'}</div>
+        <div class="detail-key">POS</div><div class="detail-val">${l.pos || '—'}</div>
+        <div class="detail-key">Address</div><div class="detail-val">${l.address || '—'}</div>
+        <div class="detail-key">Total calls</div><div class="detail-val">${hist.length}${Object.keys(counts).length ? ' (' + Object.entries(counts).map(([d, n]) => n + ' ' + DISP_LABELS[d].toLowerCase()).join(', ') + ')' : ''}</div>
+      </div>
+      ${l.notes ? `<div style="margin-top:12px;font-size:13px;color:var(--color-text-secondary);border-top:0.5px solid var(--color-border-tertiary);padding-top:10px">${l.notes}</div>` : ''}
+    </div>
+    <div class="section-label">All calls &amp; notes (${hist.length})</div>
+    <div class="detail-card" style="padding-top:.5rem;padding-bottom:.5rem">
+    ${hist.length ? hist.map(c => `
+      <div class="call-item">
+        ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
+        <span class="when">${c.date || ''}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
+      </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary);padding:10px 0">No calls logged yet</div>'}
+    </div>`;
 }
 
 let callingLeadId = null;
@@ -868,7 +923,7 @@ function renderBrowse() {
           </div>
           <div class="city-body" style="display:none">${cityLeads.map(l => `
             <div class="browse-row">
-              <span class="browse-name">${l.name}</span>
+              <a href="#" class="browse-name" onclick="openLeadDetail('${l.id}');return false">${l.name}</a>
               ${l.phone ? `<span class="browse-phone">${l.phone}</span>` : ''}
               ${l.pos ? `<span class="browse-pos">${l.pos}</span>` : ''}
               <span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span>
@@ -1055,6 +1110,7 @@ async function saveCall() {
   renderCalls();
   renderStats();
   if (browseView === 'list') renderBrowse();
+  if (document.getElementById('sec-account').classList.contains('active')) openAccount(accountLeadId);
 }
 
 let draggingTodoId = null;
