@@ -60,8 +60,9 @@ app.get('/api/calls', async (req, res) => {
 });
 
 app.post('/api/calls', async (req, res) => {
-  const { restaurant, contact, date, direction, duration, outcome } = req.body;
-  const row = { id: uid(), restaurant, contact: contact||'', date: date||null, direction: direction||'outbound', duration: duration||null, outcome: outcome||'' };
+  const { restaurant, leadId, contact, date, direction, duration, outcome, disposition } = req.body;
+  const DISPOSITIONS = ['connected', 'gatekeeper', 'no_connect'];
+  const row = { id: uid(), restaurant, leadId: leadId||null, contact: contact||'', date: date||null, loggedAt: new Date().toISOString(), direction: direction||'outbound', duration: duration||null, outcome: outcome||'', disposition: DISPOSITIONS.includes(disposition) ? disposition : null };
   res.json(await insert('calls', row));
 });
 

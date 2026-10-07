@@ -108,6 +108,16 @@
   .pill-out{background:#fff8e6;color:#7a5800}
   .pill-missed{background:#fdf0f0;color:#a32d2d}
 
+  .disp-row{display:flex;gap:8px}
+  .disp-btn{flex:1;padding:10px 6px;font-size:12px;border:1px solid var(--color-border-secondary);border-radius:var(--radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;font-family:var(--font)}
+  .disp-btn:hover{background:var(--color-bg-secondary)}
+  .disp-btn.sel{border-color:var(--color-accent);background:var(--color-bg-secondary);font-weight:600}
+  .pill-connected{background:#e3f4e8;color:#1d6b35}
+  .pill-gatekeeper{background:#fff8e6;color:#7a5800}
+  .pill-no_connect{background:#f0f2f7;color:#5a6e85}
+  .call-item{border-top:0.5px solid var(--color-border-tertiary);padding:10px 0;font-size:13px}
+  .call-item .when{font-size:11px;color:var(--color-text-secondary);margin-left:8px}
+  .call-item .note{margin-top:4px;white-space:pre-wrap}
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-start;justify-content:center;padding-top:80px}
   .modal-overlay.open{display:flex}
   .modal-box{background:var(--color-bg);border-radius:var(--radius-lg);border:0.5px solid var(--color-border-secondary);padding:1.5rem;width:100%;max-width:460px;max-height:80vh;overflow-y:auto}
@@ -188,6 +198,9 @@
         <option value="demo">Demo scheduled</option>
         <option value="closed">Closed / won</option>
       </select>
+      <select id="browse-pos-filter" onchange="renderBrowse()" style="width:auto">
+        <option value="">All POS</option>
+      </select>
       <button class="btn" id="browse-view-toggle" onclick="toggleBrowseView()">Dial list view</button>
     </div>
     <div id="browse-tree"></div>
@@ -201,7 +214,7 @@
           <th style="cursor:pointer" onclick="sortDialList('city')">City</th>
           <th style="cursor:pointer" onclick="sortDialList('stage')">Stage</th>
           <th>Website</th>
-          <th>Calls</th>
+          <th>Calls / last</th>
           <th></th>
         </tr></thead>
         <tbody id="browse-list-tbody"></tbody>
@@ -226,6 +239,9 @@
   <div class="section" id="sec-pipeline">
     <div class="toolbar">
       <span class="toolbar-label">Drag cards between columns · click Edit to update a lead</span>
+      <select id="pipeline-pos-filter" onchange="renderPipeline()" style="width:auto">
+        <option value="">All POS</option>
+      </select>
       <button class="btn primary" onclick="openModal('lead')">+ Add lead</button>
     </div>
     <div class="stage-cols" id="pipeline-board"></div>
@@ -372,6 +388,13 @@
 <div class="modal-overlay" id="modal-call">
   <div class="modal-box">
     <div class="modal-title">Log call</div>
+    <div class="form-row"><label>Disposition</label>
+      <div class="disp-row" id="ca-disp">
+        <button type="button" class="disp-btn" data-d="connected" onclick="pickDisp('connected')">Connected<br><span style="font-size:10px;color:var(--color-text-secondary)">spoke to decision maker</span></button>
+        <button type="button" class="disp-btn" data-d="gatekeeper" onclick="pickDisp('gatekeeper')">Gatekeeper<br><span style="font-size:10px;color:var(--color-text-secondary)">staff / not the owner</span></button>
+        <button type="button" class="disp-btn" data-d="no_connect" onclick="pickDisp('no_connect')">No connect<br><span style="font-size:10px;color:var(--color-text-secondary)">VM / no answer</span></button>
+      </div>
+    </div>
     <div class="form-row"><label>Restaurant *</label><input id="ca-rest" placeholder="e.g. Californo Pizza"></div>
     <div class="form-row"><label>Contact name</label><input id="ca-contact" placeholder="e.g. Alberto"></div>
     <div class="form-row"><label>Date</label><input id="ca-date" type="date"></div>
@@ -383,10 +406,21 @@
       </select>
     </div>
     <div class="form-row"><label>Duration (mins)</label><input id="ca-dur" type="number" placeholder="e.g. 15"></div>
-    <div class="form-row"><label>Outcome / summary</label><textarea id="ca-outcome" placeholder="What was discussed? Next steps?"></textarea></div>
+    <div class="form-row"><label>Notes</label><textarea id="ca-outcome" placeholder="What was discussed? Next steps?"></textarea></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('call')">Cancel</button>
       <button class="btn primary" onclick="saveCall()">Save call</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LEAD DETAIL -->
+<div class="modal-overlay" id="modal-lead">
+  <div class="modal-box" style="max-width:560px">
+    <div id="lead-detail-content"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('lead')">Close</button>
+      <button class="btn primary" id="lead-detail-log">Log call</button>
     </div>
   </div>
 </div>
@@ -485,11 +519,27 @@ function makeCard(l, col, stage) {
   col.appendChild(card);
 }
 
+function populatePosFilter(selectEl) {
+  const current = selectEl.value;
+  const posValues = [...new Set(leads.map(l => l.pos).filter(Boolean))].sort();
+  const hasUnknown = leads.some(l => !l.pos);
+  selectEl.innerHTML = '<option value="">All POS</option>'
+    + posValues.map(p => `<option value="${p}">${p}</option>`).join('')
+    + (hasUnknown ? '<option value="__unknown__">Unknown</option>' : '');
+  selectEl.value = current;
+  return current;
+}
+
+function matchesPos(l, posFilter) {
+  return !posFilter || (posFilter === '__unknown__' ? !l.pos : l.pos === posFilter);
+}
+
 function renderPipeline() {
+  const posFilter = populatePosFilter(document.getElementById('pipeline-pos-filter'));
   const board = document.getElementById('pipeline-board');
   board.innerHTML = '';
   STAGES.forEach(stage => {
-    const items = leads.filter(l => l.stage === stage);
+    const items = leads.filter(l => l.stage === stage && matchesPos(l, posFilter));
     const col = document.createElement('div');
     col.className = 'stage';
     col.dataset.stage = stage;
@@ -648,7 +698,7 @@ function renderCalls() {
       <td>${c.contact || '—'}</td>
       <td><span class="pill pill-${c.direction === 'inbound' ? 'in' : c.direction === 'outbound' ? 'out' : 'missed'}">${c.direction}</span></td>
       <td>${c.duration ? c.duration + ' min' : '—'}</td>
-      <td style="max-width:180px">${c.outcome || '—'}</td>
+      <td style="max-width:180px">${dispPill(c.disposition)} ${c.outcome || (c.disposition ? '' : '—')}</td>
       <td><button class="btn sm danger" onclick="deleteCall('${c.id}')">Delete</button></td>
     </tr>
   `).join('');
@@ -698,14 +748,14 @@ function renderDialList(filtered) {
   });
   document.getElementById('browse-list-tbody').innerHTML = sorted.map(l => `
     <tr>
-      <td>${l.name}</td>
+      <td><a href="#" style="font-weight:500" onclick="openLeadDetail('${l.id}');return false">${l.name}</a></td>
       <td>${l.owner || '—'}</td>
       <td>${l.role || '—'}</td>
       <td>${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}">${l.phone}</a>` : '—'}</td>
       <td>${l.city || '—'}</td>
       <td><span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span></td>
       <td>${l.website ? `<a href="${l.website}" target="_blank" rel="noopener">Site ↗</a>` : '—'}</td>
-      <td>${dialListCallSummary(l.name)}</td>
+      <td>${dialListCallSummary(l)}</td>
       <td>
         <button class="card-edit-btn" onclick="logCallForLead('${l.id}')">Log call</button>
         <button class="card-edit-btn" onclick="openEditModal('${l.id}')">Edit</button>
@@ -713,11 +763,58 @@ function renderDialList(filtered) {
     </tr>`).join('');
 }
 
-function dialListCallSummary(restaurantName) {
-  const matches = calls.filter(c => c.restaurant === restaurantName).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+const DISP_LABELS = { connected: 'Connected', gatekeeper: 'Gatekeeper', no_connect: 'No connect' };
+let selectedDisp = null;
+
+function pickDisp(d) {
+  selectedDisp = d;
+  document.querySelectorAll('#ca-disp .disp-btn').forEach(b => b.classList.toggle('sel', b.dataset.d === d));
+}
+
+// Calls belong to a lead by leadId; older calls fall back to restaurant name.
+function callsForLead(l) {
+  return calls.filter(c => c.leadId ? c.leadId === l.id : c.restaurant === l.name)
+    .sort((a, b) => (b.loggedAt || b.date || '').localeCompare(a.loggedAt || a.date || ''));
+}
+
+function dispPill(d) {
+  return d ? `<span class="pill pill-${d}">${DISP_LABELS[d]}</span>` : '';
+}
+
+function dialListCallSummary(l) {
+  const matches = callsForLead(l);
   if (!matches.length) return '—';
   const last = matches[0];
-  return `${matches.length}&times; <span style="color:var(--color-text-secondary);font-size:11px">(last ${last.date || '?'}, ${last.outcome ? last.outcome.slice(0, 40) : last.direction})</span>`;
+  return `${matches.length}&times; ${dispPill(last.disposition)} <span style="color:var(--color-text-secondary);font-size:11px">${last.date || ''}</span>`;
+}
+
+function openLeadDetail(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  const hist = callsForLead(l);
+  document.getElementById('lead-detail-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:600">${l.name}</div>
+        <div style="font-size:13px;color:var(--color-text-secondary)">${[l.owner, l.role].filter(Boolean).join(' · ') || ''}</div>
+      </div>
+      <span class="pill pill-${STAGE_COLORS[l.stage] || 'inactive'}">${STAGE_LABELS[l.stage] || l.stage}</span>
+    </div>
+    <div class="detail-grid" style="margin-bottom:16px">
+      <div class="detail-key">Phone</div><div class="detail-val">${l.phone ? `<a href="tel:${l.phone.replace(/[^\d+]/g, '')}">${l.phone}</a>` : '—'}</div>
+      <div class="detail-key">City</div><div class="detail-val">${l.city || '—'}</div>
+      <div class="detail-key">POS</div><div class="detail-val">${l.pos || '—'}</div>
+    </div>
+    <div class="section-label">Call history (${hist.length})</div>
+    ${hist.length ? hist.map(c => `
+      <div class="call-item">
+        ${dispPill(c.disposition) || `<span class="pill pill-inactive">${c.direction}</span>`}
+        <span class="when">${c.date || ''}${c.contact ? ' · ' + c.contact : ''}${c.duration ? ' · ' + c.duration + ' min' : ''}</span>
+        ${c.outcome ? `<div class="note">${c.outcome}</div>` : ''}
+      </div>`).join('') : '<div style="font-size:13px;color:var(--color-text-secondary)">No calls logged yet</div>'}
+  `;
+  document.getElementById('lead-detail-log').onclick = () => { closeModal('lead'); logCallForLead(id); };
+  document.getElementById('modal-lead').classList.add('open');
 }
 
 let callingLeadId = null;
@@ -726,6 +823,7 @@ function logCallForLead(id) {
   const l = leads.find(x => x.id === id);
   if (!l) return;
   callingLeadId = id;
+  pickDisp(null);
   document.getElementById('ca-rest').value = l.name;
   document.getElementById('ca-contact').value = l.owner || '';
   document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10);
@@ -737,7 +835,10 @@ function logCallForLead(id) {
 
 function renderBrowse() {
   const stageFilter = document.getElementById('browse-stage-filter').value;
-  const filtered = stageFilter ? leads.filter(l => l.stage === stageFilter) : leads;
+
+  const posFilter = populatePosFilter(document.getElementById('browse-pos-filter'));
+
+  const filtered = leads.filter(l => (!stageFilter || l.stage === stageFilter) && matchesPos(l, posFilter));
   document.getElementById('browse-count').textContent = `${filtered.length} lead${filtered.length === 1 ? '' : 's'}`;
   if (browseView === 'list') { renderDialList(filtered); return; }
 
@@ -846,10 +947,10 @@ function renderMap() {
 }
 
 function openModal(type) {
-  if (type === 'call') document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10);
+  if (type === 'call' && !document.getElementById('modal-call').classList.contains('open')) { if (!callingLeadId) pickDisp(null); document.getElementById('ca-date').value = new Date().toISOString().slice(0, 10); }
   document.getElementById('modal-' + type).classList.add('open');
 }
-function closeModal(type) { document.getElementById('modal-' + type).classList.remove('open'); }
+function closeModal(type) { if (type === 'call') callingLeadId = null; document.getElementById('modal-' + type).classList.remove('open'); }
 
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
@@ -937,6 +1038,8 @@ async function saveCall() {
   if (!rest) return;
   const call = await api('/api/calls', 'POST', {
     restaurant: rest,
+    leadId: callingLeadId,
+    disposition: selectedDisp,
     contact: document.getElementById('ca-contact').value.trim(),
     date: document.getElementById('ca-date').value,
     direction: document.getElementById('ca-dir').value,
@@ -947,6 +1050,7 @@ async function saveCall() {
   updateSaved();
   ['ca-rest', 'ca-contact', 'ca-dur', 'ca-outcome'].forEach(id => document.getElementById(id).value = '');
   callingLeadId = null;
+  pickDisp(null);
   closeModal('call');
   renderCalls();
   renderStats();
