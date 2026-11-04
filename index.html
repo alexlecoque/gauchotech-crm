@@ -233,6 +233,7 @@
       <span class="map-legend-item"><span class="map-dot" style="background:#febc11"></span>Contacted</span>
       <span class="map-legend-item"><span class="map-dot" style="background:#185fa5"></span>Demo scheduled</span>
       <span class="map-legend-item"><span class="map-dot" style="background:#1a7a1a"></span>Closed / won</span>
+      <select id="map-pos-filter" onchange="renderMap()" style="width:auto;margin-left:auto"></select>
     </div>
     <div id="map-container"></div>
     <div class="map-notice" id="map-notice" style="display:none"></div>
@@ -1040,8 +1041,10 @@ function renderMap() {
   }
   crmMap.invalidateSize();
 
-  const withCoords = leads.filter(l => l.lat != null && l.lng != null);
-  const missingCount = leads.length - withCoords.length;
+  const posFilter = populatePosFilter(document.getElementById('map-pos-filter'));
+  const filtered = leads.filter(l => matchesPos(l, posFilter));
+  const withCoords = filtered.filter(l => l.lat != null && l.lng != null);
+  const missingCount = filtered.length - withCoords.length;
   const notice = document.getElementById('map-notice');
   if (missingCount > 0) {
     notice.textContent = `${missingCount} lead${missingCount === 1 ? '' : 's'} not shown — run: npm run geocode`;
