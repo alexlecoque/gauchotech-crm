@@ -39,7 +39,7 @@ export const AREAS = {
     state: 'CA',
     localities: [
       'Ventura', 'Oxnard', 'Camarillo', 'Thousand Oaks', 'Simi Valley', 'Moorpark',
-      'Fillmore', 'Ojai', 'Port Hueneme', 'Westlake Village',
+      'Fillmore', 'Ojai', 'Port Hueneme', 'Westlake Village', 'Newbury Park', 'Santa Paula', 'Oak Park',
     ],
   },
 

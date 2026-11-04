@@ -56,7 +56,7 @@ Options: `--max-requests N` (Places request budget, default 250; `0` runs from t
 **Coverage so far:**
 - [x] Santa Barbara County — ~102 leads (2026-05-04)
 - [x] San Fernando Valley — 132 leads (2026-10-01): 26 Square/Clover, 106 imported with POS Unknown
-- [ ] Ventura County
+- [x] Ventura County — 33 leads (2026-11-04): 9 Square/Clover with owner names, 24 imported with POS Unknown; Newbury Park, Santa Paula and Oak Park added to the area
 - [ ] San Luis Obispo County
 - [ ] Contra Costa County — was enabled in the old scraper; not recorded here whether it was run
 
