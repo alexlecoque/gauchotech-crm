@@ -26,6 +26,20 @@ export const AREAS = {
     ],
   },
 
+  sgv: {
+    label: 'San Gabriel Valley',
+    county: 'Los Angeles',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 34.00, longitude: -118.21 },
+      high: { latitude: 34.23, longitude: -117.80 },
+    },
+    localities: [
+      'Pasadena', 'Altadena', 'South Pasadena', 'Alhambra', 'San Gabriel', 'San Marino', 'Arcadia', 'Monrovia',
+      'Temple City', 'Rosemead', 'El Monte', 'Duarte', 'Azusa', 'Glendora', 'Covina', 'West Covina', 'Baldwin Park',
+    ],
+  },
+
   'santa-barbara': {
     label: 'Santa Barbara County',
     county: 'Santa Barbara',
