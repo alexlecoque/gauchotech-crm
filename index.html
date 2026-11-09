@@ -272,6 +272,19 @@
   <!-- CALLS -->
   <div class="section" id="sec-calls">
     <div class="toolbar">
+      <span class="toolbar-label" id="dials-label" style="font-weight:500"></span>
+      <select id="dials-range" onchange="renderDials()" style="width:auto">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="week">This week</option>
+        <option value="7d">Last 7 days</option>
+        <option value="month">This month</option>
+        <option value="30d">Last 30 days</option>
+        <option value="all">All time</option>
+      </select>
+    </div>
+    <div id="dials-summary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div class="toolbar">
       <span class="toolbar-label" id="calls-count"></span>
       <button class="btn primary" onclick="openModal('call')">+ Log call</button>
     </div>
@@ -713,7 +726,38 @@ async function deleteCustomer(id) {
   renderStats();
 }
 
+function localDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function dialRange(range) {
+  const now = new Date();
+  const day = (offset) => localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset));
+  const today = day(0);
+  switch (range) {
+    case 'yesterday': return [day(-1), day(-1), 'Yesterday'];
+    case 'week': return [day(-((now.getDay() + 6) % 7)), today, 'This week'];
+    case '7d': return [day(-6), today, 'Last 7 days'];
+    case 'month': return [localDateStr(new Date(now.getFullYear(), now.getMonth(), 1)), today, 'This month'];
+    case '30d': return [day(-29), today, 'Last 30 days'];
+    case 'all': return ['0000-00-00', '9999-99-99', 'All time'];
+    default: return [today, today, 'Today'];
+  }
+}
+
+function renderDials() {
+  const [from, to, label] = dialRange(document.getElementById('dials-range').value);
+  const dials = calls.filter(c => c.direction === 'outbound' && c.date >= from && c.date <= to);
+  document.getElementById('dials-label').textContent = label + ': ' + dials.length + ' dial' + (dials.length === 1 ? '' : 's');
+  const counts = {};
+  dials.forEach(c => { if (c.disposition) counts[c.disposition] = (counts[c.disposition] || 0) + 1; });
+  const tile = (n, text) => `<div style="padding:10px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-lg);min-width:90px"><div style="font-size:20px;font-weight:600">${n}</div><div style="font-size:12px;color:var(--color-text-secondary)">${text}</div></div>`;
+  document.getElementById('dials-summary').innerHTML = tile(dials.length, 'Dials')
+    + Object.entries(DISP_LABELS).map(([k, v]) => tile(counts[k] || 0, v)).join('');
+}
+
 function renderCalls() {
+  renderDials();
   const tbody = document.getElementById('calls-tbody');
   const count = document.getElementById('calls-count');
   count.textContent = calls.length + ' call' + (calls.length === 1 ? '' : 's') + ' logged';
