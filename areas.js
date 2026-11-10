@@ -92,6 +92,64 @@ export const AREAS = {
     localities: ['Santa Cruz', 'Watsonville', 'Capitola', 'Aptos', 'Scotts Valley', 'Soquel', 'Felton'],
   },
 
+  'oc-north': {
+    label: 'North Orange County',
+    county: 'Orange',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 33.60, longitude: -118.13 },
+      high: { latitude: 33.96, longitude: -117.70 },
+    },
+    localities: [
+      'Anaheim', 'Fullerton', 'Orange', 'Santa Ana', 'Tustin', 'Garden Grove', 'Westminster', 'Fountain Valley',
+      'Huntington Beach', 'Costa Mesa', 'Buena Park', 'Cypress', 'Stanton', 'La Palma', 'Los Alamitos', 'Seal Beach',
+      'La Habra', 'Brea', 'Placentia', 'Yorba Linda',
+    ],
+  },
+
+  'long-beach': {
+    label: 'Long Beach / Gateway Cities',
+    county: 'Los Angeles',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 33.70, longitude: -118.25 },
+      high: { latitude: 34.03, longitude: -117.98 },
+    },
+    localities: [
+      'Long Beach', 'Signal Hill', 'Lakewood', 'Bellflower', 'Paramount', 'Downey', 'Norwalk', 'Cerritos',
+      'Artesia', 'Whittier',
+    ],
+  },
+
+  'south-bay': {
+    label: 'South Bay',
+    county: 'Los Angeles',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 33.70, longitude: -118.45 },
+      high: { latitude: 33.95, longitude: -118.22 },
+    },
+    localities: [
+      'Torrance', 'Redondo Beach', 'Hermosa Beach', 'Manhattan Beach', 'El Segundo', 'Gardena', 'Hawthorne',
+      'Lawndale', 'Carson', 'Lomita', 'Harbor City', 'San Pedro', 'Wilmington', 'Palos Verdes Estates',
+      'Rancho Palos Verdes',
+    ],
+  },
+
+  'oc-south': {
+    label: 'South Orange County',
+    county: 'Orange',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 33.37, longitude: -117.98 },
+      high: { latitude: 33.76, longitude: -117.55 },
+    },
+    localities: [
+      'Irvine', 'Newport Beach', 'Laguna Beach', 'Laguna Niguel', 'Laguna Hills', 'Aliso Viejo', 'Mission Viejo',
+      'Lake Forest', 'Rancho Santa Margarita', 'Ladera Ranch', 'San Juan Capistrano', 'San Clemente', 'Dana Point',
+    ],
+  },
+
   'contra-costa': {
     label: 'Contra Costa County',
     county: 'Contra Costa',

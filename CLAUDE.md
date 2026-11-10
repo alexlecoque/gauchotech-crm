@@ -51,7 +51,7 @@ Options: `--max-requests N` (Places request budget, default 250; `0` runs from t
 
 **Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `browser.js` (headless Chrome fallback for sites that block plain fetches), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
 
-**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `monterey`, `santa-cruz`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
+**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `monterey`, `santa-cruz`, `oc-north`, `long-beach`, `south-bay`, `oc-south`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
 
 **Coverage so far:**
 - [x] Santa Barbara County — ~102 leads (2026-05-04)
@@ -61,6 +61,10 @@ Options: `--max-requests N` (Places request budget, default 250; `0` runs from t
 - [x] San Luis Obispo County — 2 leads (2026-11-10): both Square with owner names (My Friend Mike's, Pie In The Sky Cayucos); Los Osos, Cambria and Cayucos added to the area. Unknown-POS shops not imported (see out/san-luis-obispo-other-shops-*.csv)
 - [x] Monterey County — 2 leads (2026-11-10): both Square with owner names (The Oven Pizzeria, Tricycle Pizza). Unknown-POS shops not imported (see out/monterey-other-shops-*.csv)
 - [x] Santa Cruz County — 1 lead (2026-11-10): Slice Project, Square, with owner name. Unknown-POS shops not imported (see out/santa-cruz-other-shops-*.csv)
+- [x] North Orange County (`oc-north`) — 12 leads (2026-11-10): all Square/Clover, 8 with owner names; ZeroZero39 Anaheim attached as a location of the Huntington Beach lead. 1 weak hint, 88 unknown-POS ICP-fit shops not imported (see out/oc-north-*.csv)
+- [x] Long Beach / Gateway Cities (`long-beach`) — 8 leads (2026-11-10): all Square/Clover, 4 with owner names. 67 unknown-POS ICP-fit shops not imported (see out/long-beach-*.csv)
+- [x] South Bay (`south-bay`) — 1 lead (2026-11-10): L.A Waterfront Pizza (Clover). 69 unknown-POS ICP-fit shops not imported (see out/south-bay-*.csv)
+- [x] South Orange County (`oc-south`) — 8 leads (2026-11-10): all Square/Clover, 6 with owner names; Sgt. Pepperoni's (4 shops) and Ball Park Pizza (2 shops) imported as one lead each with locations. 32 unknown-POS ICP-fit shops not imported (see out/oc-south-*.csv)
 - [ ] Contra Costa County — was enabled in the old scraper; not recorded here whether it was run
 
 **Dedupe:** matched against existing leads and customers by `place_id`, then phone, then name + address. Another location of a business already in the CRM (shared phone, or same name + website) is added to that lead's `locations` instead of becoming a new lead.
