@@ -16,7 +16,7 @@ export const LIST_PRICE_PER_1000 = 35;
 const FIELD_MASK = [
   'places.id', 'places.displayName', 'places.formattedAddress', 'places.addressComponents',
   'places.nationalPhoneNumber', 'places.websiteUri', 'places.location', 'places.types',
-  'places.primaryType', 'places.businessStatus', 'places.googleMapsUri', 'places.userRatingCount',
+  'places.primaryType', 'places.businessStatus', 'places.googleMapsUri', 'places.userRatingCount', 'places.rating',
   'nextPageToken',
 ].join(',');
 

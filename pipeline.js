@@ -16,7 +16,7 @@ export const CSV_COLUMNS = [
   'pos', 'pos_confidence', 'pos_evidence', 'pos_method', 'pos_conflict', 'ordering_provider', 'ordering_url', 'signals',
   'pages_checked', 'fetch_error', 'match_rule', 'matched_type', 'matched_lead_id', 'matched_name',
   'primary_place_id', 'location_count', 'place_id', 'google_maps_url', 'primary_type',
-  'business_status', 'rating_count', 'lat', 'lng', 'query',
+  'business_status', 'rating_count', 'rating', 'lat', 'lng', 'query',
 ];
 
 const component = (place, type) => place.addressComponents?.find(c => c.types?.includes(type))?.longText || null;
@@ -45,6 +45,7 @@ function toRow({ place, query, locality }, area) {
     primary_type: place.primaryType || null,
     business_status: place.businessStatus || null,
     rating_count: place.userRatingCount ?? null,
+    rating: place.rating ?? null,
     lat: place.location?.latitude ?? null,
     lng: place.location?.longitude ?? null,
     query,

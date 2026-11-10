@@ -63,8 +63,33 @@ export const AREAS = {
     state: 'CA',
     localities: [
       'San Luis Obispo', 'Paso Robles', 'Atascadero', 'Arroyo Grande', 'Grover Beach',
-      'Pismo Beach', 'Morro Bay', 'Templeton', 'Nipomo',
+      'Pismo Beach', 'Morro Bay', 'Templeton', 'Nipomo', 'Los Osos', 'Cambria', 'Cayucos',
     ],
+  },
+
+  monterey: {
+    label: 'Monterey County',
+    county: 'Monterey',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 36.05, longitude: -122.10 },
+      high: { latitude: 36.95, longitude: -121.00 },
+    },
+    localities: [
+      'Salinas', 'Monterey', 'Seaside', 'Marina', 'Pacific Grove', 'Carmel-by-the-Sea', 'Carmel Valley',
+      'Castroville', 'Gonzales', 'Soledad', 'Greenfield', 'King City',
+    ],
+  },
+
+  'santa-cruz': {
+    label: 'Santa Cruz County',
+    county: 'Santa Cruz',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 36.85, longitude: -122.35 },
+      high: { latitude: 37.30, longitude: -121.55 },
+    },
+    localities: ['Santa Cruz', 'Watsonville', 'Capitola', 'Aptos', 'Scotts Valley', 'Soquel', 'Felton'],
   },
 
   'contra-costa': {

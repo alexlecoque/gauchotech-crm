@@ -51,14 +51,16 @@ Options: `--max-requests N` (Places request budget, default 250; `0` runs from t
 
 **Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `browser.js` (headless Chrome fallback for sites that block plain fetches), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
 
-**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
+**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `monterey`, `santa-cruz`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
 
 **Coverage so far:**
 - [x] Santa Barbara County — ~102 leads (2026-05-04)
 - [x] San Fernando Valley — 132 leads (2026-10-01): 26 Square/Clover, 106 imported with POS Unknown
 - [x] Ventura County — 33 leads (2026-11-04): 9 Square/Clover with owner names, 24 imported with POS Unknown; Newbury Park, Santa Paula and Oak Park added to the area
 - [x] San Gabriel Valley — 11 leads (2026-11-04): 10 Square/Clover (9 with owner names) + 1 weak Square hint; 786 Degrees Pasadena added as a location of the Sun Valley lead. Unknown-POS shops were not imported this time (see out/sgv-other-shops-*.csv)
-- [ ] San Luis Obispo County
+- [x] San Luis Obispo County — 2 leads (2026-11-10): both Square with owner names (My Friend Mike's, Pie In The Sky Cayucos); Los Osos, Cambria and Cayucos added to the area. Unknown-POS shops not imported (see out/san-luis-obispo-other-shops-*.csv)
+- [x] Monterey County — 2 leads (2026-11-10): both Square with owner names (The Oven Pizzeria, Tricycle Pizza). Unknown-POS shops not imported (see out/monterey-other-shops-*.csv)
+- [x] Santa Cruz County — 1 lead (2026-11-10): Slice Project, Square, with owner name. Unknown-POS shops not imported (see out/santa-cruz-other-shops-*.csv)
 - [ ] Contra Costa County — was enabled in the old scraper; not recorded here whether it was run
 
 **Dedupe:** matched against existing leads and customers by `place_id`, then phone, then name + address. Another location of a business already in the CRM (shared phone, or same name + website) is added to that lead's `locations` instead of becoming a new lead.
