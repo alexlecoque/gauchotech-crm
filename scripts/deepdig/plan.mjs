@@ -25,6 +25,16 @@ function icpGuess(r) {
 }
 const rows = parseCsv(readFileSync(file, 'utf8'));
 const ov = loadJson(overridesFile, {});
+// owner research (scripts/deepdig/owners.mjs): strong/medium results fill the owner columns unless an override sets them
+const owners = loadJson(`${PROJECT}/out/logs/owners-${area}.json`, {});
+for (const r of rows) {
+  const o = ov[r.place_id] || {};
+  const best = owners[r.place_id]?.decision?.best;
+  if (best && !o.owner_name && ['strong', 'medium'].includes(best.confidence)) {
+    r.owner_name = best.name; r.owner_role = best.role; r.owner_confidence = best.confidence;
+    r.owner_source_url = best.urls[0] || ''; r.owner_sources = best.sources.join('+');
+  }
+}
 const TARGET = new Set(['Square', 'Clover']);
 const ts = stamp();
 
@@ -32,7 +42,7 @@ const ts = stamp();
 const planned = new Set();
 for (const f of earlier) for (const r of parseCsv(readFileSync(f, 'utf8'))) { planned.add(r.place_id); if (normPhone(r.phone)) planned.add('p' + normPhone(r.phone)); }
 
-const PLAN_COLS = ['verdict', 'reason', 'name', 'address', 'city', 'zip', 'area', 'county', 'phone', 'website', 'pos', 'pos_confidence', 'pos_evidence', 'pos_method', 'pos_conflict', 'ordering_provider', 'ordering_url', 'signals', 'pages_checked', 'fetch_error', 'match_rule', 'matched_type', 'matched_lead_id', 'matched_name', 'primary_place_id', 'location_count', 'place_id', 'google_maps_url', 'primary_type', 'business_status', 'rating_count', 'rating', 'lat', 'lng', 'query', 'import_plan', 'volume_estimate', 'volume_basis', 'icp_fit', 'icp_notes', 'weak_hint', 'open_check', 'pos_checked_live', 'phone_match', 'notes', 'owner_name', 'owner_role', 'owner_confidence', 'owner_source_url', 'original_verdict', 'deep_dig', 'web_searched', 'deep_dig_notes'];
+const PLAN_COLS = ['verdict', 'reason', 'name', 'address', 'city', 'zip', 'area', 'county', 'phone', 'website', 'pos', 'pos_confidence', 'pos_evidence', 'pos_method', 'pos_conflict', 'ordering_provider', 'ordering_url', 'signals', 'pages_checked', 'fetch_error', 'match_rule', 'matched_type', 'matched_lead_id', 'matched_name', 'primary_place_id', 'location_count', 'place_id', 'google_maps_url', 'primary_type', 'business_status', 'rating_count', 'rating', 'lat', 'lng', 'query', 'import_plan', 'volume_estimate', 'volume_basis', 'icp_fit', 'icp_notes', 'weak_hint', 'open_check', 'pos_checked_live', 'phone_match', 'notes', 'owner_name', 'owner_role', 'owner_confidence', 'owner_source_url', 'owner_sources', 'original_verdict', 'deep_dig', 'web_searched', 'deep_dig_notes'];
 const VOL = { high: 0, medium: 1, low: 2 };
 
 const targets = [], weak = [], unknownFit = [], other = [], dropped = [], merged = [];
@@ -68,7 +78,7 @@ for (const r of rows) {
       continue;
     }
     r.import_plan = 'target';
-    const owner = r.owner_name ? `Owner: ${r.owner_name}${r.owner_role ? ` — ${r.owner_role}` : ''} (${r.owner_confidence || 'unrated'}${r.owner_source_url ? `; ${r.owner_source_url}` : ''}). ` : 'Owner: not found. ';
+    const owner = r.owner_name ? `Owner: ${r.owner_name}${r.owner_role ? ` — ${r.owner_role}` : ''} (${r.owner_confidence || 'unrated'}${r.owner_sources ? `, ${r.owner_sources}` : ''}${r.owner_source_url ? `; ${r.owner_source_url}` : ''}). ` : 'Owner: not found. ';
     r.notes = `POS: ${r.pos} (${r.pos_confidence} confidence), re-checked live ${today()}. Evidence: ${r.pos_evidence}. ${owner}Volume ${r.volume_estimate}: ${r.volume_basis}.${r.extra_note ? ` Note: ${r.extra_note}.` : ''}`;
     targets.push(r);
   } else if (r.verdict === 'unknown_pos') {

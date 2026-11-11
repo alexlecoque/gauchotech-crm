@@ -37,7 +37,7 @@ async function start() {
   unavailable = true;
 }
 
-async function render(url, waitMs) {
+async function render(url, waitMs, script) {
   await start();
   if (unavailable) return null;
 
@@ -73,7 +73,11 @@ async function render(url, waitMs) {
       if (len > 400 && len === last) { if (++stable >= 2) break; } else stable = 0;
       last = len;
     }
+    // optional script run on the loaded page (may return a promise), e.g. a fetch against the page's own API
+    let scriptResult;
+    if (script) scriptResult = (await send('Runtime.evaluate', { expression: script, returnByValue: true, awaitPromise: true }))?.result?.value;
     return {
+      scriptResult,
       finalUrl: (await evaluate('location.href')) || url,
       title: (await evaluate('document.title')) || '',
       text: (await evaluate('document.body ? document.body.innerText : ""')) || '',
@@ -88,9 +92,9 @@ async function render(url, waitMs) {
 
 // Returns { finalUrl, title, text, html, requests[] }, or null when Chrome is not available
 // or the page could not be loaded.
-export function renderPage(url, { waitMs = 12000 } = {}) {
+export function renderPage(url, { waitMs = 12000, script = null } = {}) {
   // a tab that stops answering must not hold up every page queued behind it
-  const run = queue.then(() => Promise.race([render(url, waitMs), sleep(waitMs + 20000).then(() => null)])).catch(() => null);
+  const run = queue.then(() => Promise.race([render(url, waitMs, script), sleep(waitMs + 40000).then(() => null)])).catch(() => null);
   queue = run.then(() => sleep(RENDER_GAP_MS));
   return run;
 }

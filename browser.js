@@ -7,7 +7,8 @@ import os from 'node:os';
 import path from 'node:path';
 
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const PORT = 9377;
+// SCRAPER_CHROME_PORT lets a second scraper run beside this one with its own Chrome
+const PORT = Number(process.env.SCRAPER_CHROME_PORT || 9377);
 // Headless Chrome announces itself in its user agent, which bot checks refuse; send the normal one
 const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36';
 const RENDER_GAP_MS = 1500;
@@ -24,7 +25,7 @@ async function start() {
   chrome = spawn(CHROME, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     `--user-agent=${USER_AGENT}`, '--disable-blink-features=AutomationControlled',
-    `--remote-debugging-port=${PORT}`, `--user-data-dir=${path.join(os.tmpdir(), 'neo01-scraper-chrome')}`,
+    `--remote-debugging-port=${PORT}`, `--user-data-dir=${path.join(os.tmpdir(), 'neo01-scraper-chrome' + (PORT === 9377 ? '' : '-' + PORT))}`,
     '--window-size=1280,900', 'about:blank',
   ], { stdio: 'ignore' });
   // don't leave Chrome running when the scraper stops or is interrupted
