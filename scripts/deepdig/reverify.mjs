@@ -11,7 +11,7 @@ const verifiedWhere = where => /address\/phone match|name and city match|own web
 const all = [];
 for (const f of files) for (const r of parseCsv(readFileSync(f, 'utf8'))) if (r.verdict === 'new_target') all.push({ ...r, _file: f });
 // deterministic-but-random sample: seeded shuffle
-let seed = Number(new Date().toISOString().slice(0, 10).replace(/-/g, '')) % 9973;
+let seed = (Number(process.env.REVERIFY_SEED) || Number(new Date().toISOString().slice(0, 10).replace(/-/g, ''))) % 9973;
 const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
 const sample = [...all].sort(() => rand() - 0.5).slice(0, Number(n));
 console.log(`${all.length} planned target(s) across ${files.length} plan(s); re-verifying ${sample.length}`);
@@ -33,7 +33,7 @@ for (const r of sample) {
   results.push({ name: r.name, city: r.city, plan: r._file.split('/').pop(), planned: `${r.pos} ${r.pos_confidence}`, google: d.businessStatus, live: det ? `${det.pos || 'none'} ${det.confidence || ''} via ${via}` : 'no check', where: (det?.evidenceWhere || '').slice(0, 160), pass });
   console.log(`  ${pass ? 'PASS' : 'FAIL'} ${r.name} [${r.city}] planned ${r.pos}/${r.pos_confidence} → Google ${d.businessStatus}, live ${det?.pos || 'none'} ${det?.confidence || ''} (${via})`);
 }
-saveJson(`${PROJECT}/out/logs/reverify-${today()}.json`, results);
+saveJson(`${PROJECT}/out/logs/reverify-${today()}${process.env.REVERIFY_SEED ? "-" + process.env.REVERIFY_SEED : ""}.json`, results);
 closeBrowser();
 console.log(`\n${results.filter(r => r.pass).length}/${results.length} passed`);
 process.exit(0);

@@ -10,7 +10,7 @@ const state = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const leads = await db.getAll('leads');
 let changed = 0, skipped = 0;
 for (const [id, s] of Object.entries(state)) {
-  const lead = leads.find(l => l.id === id);
+  const lead = leads.find(l => l.id === id || (l.place_id && l.place_id === id));
   const best = s.decision?.best;
   if (!lead) { console.log(`  ? ${id}: lead not found`); continue; }
   if (!best || !['strong', 'medium'].includes(best.confidence)) { console.log(`  - ${lead.name} [${lead.city}]: no strong/medium owner (${(s.decision?.all || []).slice(0, 2).map(a => `${a.name}/${a.confidence}`).join(', ') || 'no names'})`); skipped++; continue; }
@@ -21,7 +21,7 @@ for (const [id, s] of Object.entries(state)) {
   const stampNote = `Owner research ${new Date().toISOString().slice(0, 10)}: ${best.name} — ${best.role} (${best.confidence}, ${best.sources.join('+')}${best.urls[0] ? `; ${best.urls[0]}` : ''}).`;
   if (lead.notes && !lead.notes.includes(stampNote)) changes.notes = `${lead.notes} ${stampNote}`;
   console.log(`  ${COMMIT ? '✓' : '→'} ${lead.name} [${lead.city}]: ${JSON.stringify({ owner: changes.owner, role: changes.role })} (${best.confidence}, ${best.sources.join('+')})`);
-  if (COMMIT) await db.update('leads', id, changes);
+  if (COMMIT) await db.update('leads', lead.id, changes);
   changed++;
 }
 console.log(`${COMMIT ? 'updated' : 'would update'} ${changed} lead(s), ${skipped} left as is`);

@@ -49,9 +49,9 @@ npm run scrape -- --import out/<file>.csv --commit
 
 Options: `--max-requests N` (Places request budget, default 250; `0` runs from the search cache only and never calls Places), `--no-cache` (search results are cached in `data/places-cache/` for 30 days, so re-runs cost no Places calls).
 
-**Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `browser.js` (headless Chrome fallback for sites that block plain fetches), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI).
+**Files:** `areas.js` (search areas), `places.js` (Google search, budget, cache), `filters.js` (chains, non-pizza), `match.js` (dedupe), `pos.js` (POS detection), `browser.js` (headless Chrome fallback for sites that block plain fetches; `SCRAPER_CHROME_PORT` runs a second scraper beside the first), `pipeline.js` (verdicts, planned writes), `csv.js`, `scraper.js` (CLI). `scripts/deepdig/` holds the second-pass toolkit (deep dig of unknown-POS shops, live verification, owner research, import plans) — see its README.
 
-**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `monterey`, `santa-cruz`, `oc-north`, `long-beach`, `south-bay`, `oc-south`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
+**Areas** (`areas.js`): `sfv`, `sgv`, `santa-barbara`, `ventura`, `san-luis-obispo`, `monterey`, `santa-cruz`, `oc-north`, `long-beach`, `south-bay`, `oc-south`, `la-central`, `sd-city`, `sd-north`, `inland-empire`, `east-bay`, `contra-costa`. To add one, add an entry with a label, county, locality list and optional bounding box — no code changes.
 
 **Coverage so far:**
 - [x] Santa Barbara County — ~102 leads (2026-05-04)
@@ -65,6 +65,11 @@ Options: `--max-requests N` (Places request budget, default 250; `0` runs from t
 - [x] Long Beach / Gateway Cities (`long-beach`) — 8 leads (2026-11-10): all Square/Clover, 4 with owner names. 67 unknown-POS ICP-fit shops not imported (see out/long-beach-*.csv)
 - [x] South Bay (`south-bay`) — 1 lead (2026-11-10): L.A Waterfront Pizza (Clover). 69 unknown-POS ICP-fit shops not imported (see out/south-bay-*.csv)
 - [x] South Orange County (`oc-south`) — 8 leads (2026-11-10): all Square/Clover, 6 with owner names; Sgt. Pepperoni's (4 shops) and Ball Park Pizza (2 shops) imported as one lead each with locations. 32 unknown-POS ICP-fit shops not imported (see out/oc-south-*.csv)
+- [x] Central / West Los Angeles (`la-central`) — 17 leads (2026-11-11): all Square/Clover, 16 with owner names (LA County health-permit and FBN records); BEST FCKN PIZZA Mid-City attached as a location of the Hollywood lead. 101 unknown-POS ICP-fit shops not imported (see out/la-central-*.csv)
+- [x] San Diego City / South County (`sd-city`) — 18 leads (2026-11-11): all Square/Clover, 14 with owner names. 74 unknown-POS ICP-fit shops not imported (see out/sd-city-*.csv)
+- [x] North San Diego County (`sd-north`) — 4 leads (2026-11-11): all Square/Clover, all with owner names. 47 unknown-POS ICP-fit shops not imported (see out/sd-north-*.csv)
+- [x] Inland Empire (`inland-empire`) — 9 leads (2026-11-11): all Square/Clover, 3 with owner names (no scriptable owner records for San Bernardino / Riverside counties). 84 unknown-POS ICP-fit shops not imported (see out/inland-empire-*.csv)
+- [x] East Bay (`east-bay`) — 11 leads (2026-11-11): all Square/Clover, 9 with owner names. 59 unknown-POS ICP-fit shops not imported (see out/east-bay-*.csv)
 - [ ] Contra Costa County — was enabled in the old scraper; not recorded here whether it was run
 
 **Dedupe:** matched against existing leads and customers by `place_id`, then phone, then name + address. Another location of a business already in the CRM (shared phone, or same name + website) is added to that lead's `locations` instead of becoming a new lead.
