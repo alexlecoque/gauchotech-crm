@@ -150,6 +150,73 @@ export const AREAS = {
     ],
   },
 
+  'la-central': {
+    label: 'Central / West Los Angeles',
+    county: 'Los Angeles',
+    state: 'CA',
+    // sits between the SFV box (north, 34.115), the SGV box (east, -118.21), the South Bay box (south, 33.95)
+    // and the Long Beach / Gateway box (east, -118.25) — none of them overlap
+    bounds: {
+      low:  { latitude: 33.95,  longitude: -118.52 },
+      high: { latitude: 34.115, longitude: -118.25 },
+    },
+    localities: [
+      'Hollywood', 'West Hollywood', 'Downtown Los Angeles', 'Silver Lake', 'Echo Park', 'Mid-City', 'Koreatown',
+      'Westwood', 'Santa Monica', 'Venice', 'Culver City', 'Mar Vista', 'Inglewood', 'South Los Angeles',
+      'Huntington Park',
+    ],
+  },
+
+  'sd-city': {
+    label: 'San Diego City / South County',
+    county: 'San Diego',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 32.53, longitude: -117.30 },
+      high: { latitude: 32.95, longitude: -116.85 },
+    },
+    localities: [
+      'San Diego', 'La Jolla', 'Pacific Beach', 'Chula Vista', 'National City', 'El Cajon', 'La Mesa', 'Santee',
+    ],
+  },
+
+  'sd-north': {
+    label: 'North San Diego County',
+    county: 'San Diego',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 32.95, longitude: -117.45 },
+      high: { latitude: 33.30, longitude: -116.95 },
+    },
+    localities: ['Oceanside', 'Carlsbad', 'Encinitas', 'Vista', 'San Marcos', 'Escondido', 'Poway'],
+  },
+
+  'inland-empire': {
+    label: 'Inland Empire',
+    county: 'San Bernardino',
+    countyByCity: { Riverside: 'Riverside', Corona: 'Riverside' },
+    state: 'CA',
+    // starts at -117.70 where the North OC box ends
+    bounds: {
+      low:  { latitude: 33.80, longitude: -117.70 },
+      high: { latitude: 34.20, longitude: -117.10 },
+    },
+    localities: [
+      'Riverside', 'Corona', 'Ontario', 'Rancho Cucamonga', 'Upland', 'Fontana', 'San Bernardino', 'Redlands', 'Chino',
+    ],
+  },
+
+  'east-bay': {
+    label: 'East Bay',
+    county: 'Alameda',
+    state: 'CA',
+    bounds: {
+      low:  { latitude: 37.45, longitude: -122.35 },
+      high: { latitude: 37.91, longitude: -121.85 },
+    },
+    localities: ['Oakland', 'Berkeley', 'Alameda', 'San Leandro', 'Hayward', 'Fremont', 'Union City'],
+  },
+
   'contra-costa': {
     label: 'Contra Costa County',
     county: 'Contra Costa',

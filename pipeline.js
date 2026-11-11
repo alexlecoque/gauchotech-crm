@@ -30,14 +30,16 @@ function cityOf(place, locality) {
 }
 
 function toRow({ place, query, locality }, area) {
+  const city = cityOf(place, locality);
   return {
     verdict: '', reason: '',
     name: place.displayName?.text || '',
     address: place.formattedAddress || null,
-    city: cityOf(place, locality),
+    city,
     zip: component(place, 'postal_code'),
     area: area.label,
-    county: area.county,
+    // an area that straddles two counties lists the exceptions in countyByCity
+    county: area.countyByCity?.[city] || area.county,
     phone: place.nationalPhoneNumber || null,
     website: place.websiteUri || null,
     place_id: place.id,
