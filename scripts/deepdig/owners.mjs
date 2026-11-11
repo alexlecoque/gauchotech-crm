@@ -21,7 +21,7 @@ const FRESH = process.argv.includes('--fresh');
 
 // ── name hygiene ────────────────────────────────────────────────────────
 const AGENT_SERVICES = /legalzoom|registered agent|incorp services|corporate creations|ct corporation|c t corporation|paracorp|cogency|northwest registered|united states corporation agents|inc\.? services|agents inc|law (?:group|office|firm)|cpa|accountanc|tax service|bookkeep|bizfilings|zenbusiness|harbor compliance|swyft|rocket lawyer|corporation service company|national registered|registered agents? (?:inc|llc)/i;
-const NOT_PERSON = /\b(pizza|pizzeria|restaurant|cafe|kitchen|grill|llc|inc|corp|corporation|company|co|trust|dated|county|beach|city|street|avenue|blvd|group|holdings|enterprises|ventures|foods|food|bros|brothers|famous|original|best|new york|california|italian|brick|oven|slice|the|and|of|owner|manager|reviews|yelp|google|facebook|instagram|linkedin|menu|order|online|delivery|north|south|east|west|san|los|la|santa|el|del|mission|valley|park|hills|heights|village|center|plaza|market|bar|bakery|deli|catering|express|house|place|shop|store|team|staff|family|guest|customer|business|april|march|june|july|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
+const NOT_PERSON = /\b(pizza|pizzeria|restaurant|cafe|kitchen|grill|taproom|tap|brewing|brewery|grotto|liquor|cantina|bistro|eatery|diner|lounge|tavern|pub|wings|subs|burgers|tacos|sushi|ramen|bbq|catering|bakery|coffee|donuts|kabob|halal|llc|inc|corp|corporation|company|co|trust|dated|county|beach|city|street|avenue|blvd|group|holdings|enterprises|ventures|foods|food|bros|brothers|famous|original|best|new york|california|italian|brick|oven|slice|the|and|of|owner|manager|reviews|yelp|google|facebook|instagram|linkedin|menu|order|online|delivery|north|south|east|west|san|los|la|santa|el|del|mission|valley|park|hills|heights|village|center|plaza|market|bar|bakery|deli|catering|express|house|place|shop|store|team|staff|family|guest|customer|business|april|march|june|july|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
 const TITLE_WORDS = /^(mr|mrs|ms|dr|chef|owner|founder|manager|president|ceo)\.?$/i;
 export function cleanPerson(raw) {
   if (!raw) return null;
@@ -33,6 +33,7 @@ export function cleanPerson(raw) {
   if (words.length < 2 || words.length > 4) return null;
   if (AGENT_SERVICES.test(s) || NOT_PERSON.test(s)) return null;
   if (!words.every(w => /^[A-Za-z][A-Za-z'.-]*$/.test(w))) return null;
+  if (words.some(w => /['’]s$/i.test(w) || /^(new|experience|franchise|at|in|on|from|with|about|meet|our|your|their|his|her|cybo|yelp|llc|inc|says|said|st|ave|blvd|rd|what|heart|love|thank|thanks|great|good|best|welcome|home|contact|hours|open|closed|check|visit|call|today|terrible|service|very|really|super|just|also|here|there|this|that|these|those|happy|hour|free|order|online|menu|photos|reviews|review|read|more|see|view|get|join|follow|like|share|now|then|when|where|why|how|who|dear|hey|hello|hi|yes|no|not)$/i.test(w))) return null;
   const tc = w => w.length <= 2 && /^[A-Z]\.?$/.test(w) ? w : w.charAt(0).toUpperCase() + (w.slice(1) === w.slice(1).toUpperCase() ? w.slice(1).toLowerCase() : w.slice(1));
   const name = words.map(w => w.split('-').map(tc).join('-')).join(' ');
   // drop a lone middle initial for matching, keep it for display
@@ -41,7 +42,8 @@ export function cleanPerson(raw) {
 const NICK = { mike: 'michael', leo: 'leonardo', leon: 'leonardo', mikey: 'michael', tony: 'anthony', bill: 'william', billy: 'william', will: 'william', bob: 'robert', bobby: 'robert', rob: 'robert', jim: 'james', jimmy: 'james', joe: 'joseph', joey: 'joseph', dave: 'david', tom: 'thomas', tommy: 'thomas', chris: 'christopher', nick: 'nicholas', nicky: 'nicholas', alex: 'alexander', sam: 'samuel', sammy: 'samuel', dan: 'daniel', danny: 'daniel', rick: 'richard', rich: 'richard', ricky: 'richard', ed: 'edward', eddie: 'edward', steve: 'steven', matt: 'matthew', andy: 'andrew', pete: 'peter', frank: 'francis', frankie: 'francis', vinny: 'vincent', vince: 'vincent', sal: 'salvatore', ben: 'benjamin', jon: 'jonathan', jake: 'jacob', jeff: 'jeffrey', greg: 'gregory', ron: 'ronald', ronnie: 'ronald', don: 'donald', ken: 'kenneth', kenny: 'kenneth', larry: 'lawrence', jerry: 'gerald', ray: 'raymond', lou: 'louis', louie: 'louis', tim: 'timothy', pat: 'patrick', ted: 'theodore', al: 'albert', johnny: 'john', jack: 'john', charlie: 'charles', chuck: 'charles', fred: 'frederick', hank: 'henry', manny: 'manuel', pepe: 'jose', paco: 'francisco', chuy: 'jesus', memo: 'guillermo', nacho: 'ignacio', lupe: 'guadalupe', toni: 'antonia', liz: 'elizabeth', beth: 'elizabeth', kate: 'katherine', katie: 'katherine', cathy: 'catherine', maggie: 'margaret', peggy: 'margaret', sue: 'susan', jen: 'jennifer', jenny: 'jennifer', debbie: 'deborah', deb: 'deborah', patty: 'patricia', trish: 'patricia', vicky: 'victoria', chrissy: 'christine', gabe: 'gabriel', gabby: 'gabriela', alejandro: 'alex', jose: 'jose' };
 export const personKey = name => { const w = String(name || '').toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter(x => x.length > 1); if (!w.length) return ''; const first = NICK[w[0]] || w[0]; return `${first} ${w[w.length - 1]}`; };
 const OWNER_ROLE = /owner|ceo|chief executive|president|managing member|general partner|proprietor|founder|registrant|principal|member|manager|partner|director|chairman/i;
-const roleRank = r => { r = String(r || ''); return /owner|proprietor|registrant/i.test(r) ? 0 : /ceo|chief executive|president|founder|managing member|general partner/i.test(r) ? 1 : /member|partner|principal/i.test(r) ? 2 : /manager/i.test(r) ? 3 : /director|chairman/i.test(r) ? 4 : /secretary|treasurer|cfo|chief financial/i.test(r) ? 6 : 5; };
+const rankOne = r => /owner|proprietor|registrant/i.test(r) ? 0 : /vice president|secretary|treasurer|cfo|chief financial|asst/i.test(r) ? 6 : /ceo|chief executive|president|founder|managing member|general partner/i.test(r) ? 1 : /member|partner|principal/i.test(r) ? 2 : /manager/i.test(r) ? 3 : /director|chairman/i.test(r) ? 4 : 5;
+const roleRank = r => Math.min(...String(r || '').split('/').map(x => rankOne(x.trim())));
 const niceRole = r => {
   r = String(r || '').replace(/\s+/g, ' ').trim();
   if (!r) return '';
@@ -60,11 +62,20 @@ const niceRole = r => {
 };
 
 // ── 1. ABC ──────────────────────────────────────────────────────────────
-function abcCandidates(abc) {
+const GENERIC = new Set(['pizza', 'pizzeria', 'restaurant', 'the', 'and', 'of', 'italian', 'kitchen', 'cafe', 'grill', 'new', 'york', 'style', 'inc', 'llc', 'corp', 'co', 'company', 'house', 'shop', 'bar', 'deli', 'giant', 'best', 'original', 'famous', 'brothers', 'bros']);
+const nameOverlap = (a, b) => { const wa = nameKey(a).split(' ').filter(w => w.length >= 3 && !GENERIC.has(w)); const wb = new Set(nameKey(b).split(' ')); return wa.some(w => wb.has(w)); };
+function abcCandidates(abc, shop) {
   const out = [];
   for (const h of abc || []) {
-    const sameBiz = h.matched === 'address' || h.matched === 'name';
-    if (!sameBiz) continue;
+    if (!(h.matched === 'address' || h.matched === 'name')) continue;
+    // same address but a DBA / licensee that shares no name word with the shop: another business in the building (food hall, sister concept)
+    // a name-only hit must really be this shop: same name key, or the full (2+ word) shop key inside the DBA and the license in the shop's city
+    const shopKey = nameKey(shop.name), dbaKey = nameKey(h.dba || '');
+    const keyIncludes = (a, b) => (` ${a} `).includes(` ${b} `);
+    const nameOk = h.matched === 'name' && (dbaKey === shopKey || (shopKey.split(' ').length >= 2 && keyIncludes(dbaKey, shopKey) && sameCity(h.address, shop)));
+    const sameBiz = h.matched === 'address' ? (nameOverlap(h.dba || '', shop.name) || nameOverlap(h.licensee || '', shop.name)) : nameOk;
+    const flag = sameBiz ? {} : { official: false, weak: true };
+    const why = sameBiz ? '' : ' — same address, different DBA; not proof';
     for (const m of h.members || []) {
       const mm = m.match(/^(OFFICER|MEMBER|STOCKHOLDER|LICENSEE|GENERAL PARTNER|LIMITED PARTNER|OWNER|TRUSTEE):\s*(.+?)(?:\s*\(([^)]+)\))?$/);
       if (!mm) continue;
@@ -72,12 +83,12 @@ function abcCandidates(abc) {
       if (kind === 'LICENSEE' && /\b(LLC|INC|CORP|CORPORATION|CO|LP|LLP|TRUST)\b/i.test(who)) continue;
       const name = cleanPerson(who);
       if (!name) continue;
-      out.push({ name, role: niceRole(role || (kind === 'LICENSEE' ? 'owner' : kind === 'STOCKHOLDER' ? 'stockholder' : kind)), source: 'abc', official: true, url: h.url, note: `ABC license ${h.license} (${h.dba || h.licensee})` });
+      out.push({ name, role: niceRole(role || (kind === 'LICENSEE' ? 'owner' : kind === 'STOCKHOLDER' ? 'stockholder' : kind)), source: 'abc', official: true, ...flag, url: h.url, note: `ABC license ${h.license} (${h.dba || h.licensee})${why}` });
     }
     // a sole-proprietor licensee is the owner
-    if (!(h.members || []).some(m => /^OFFICER|^MEMBER/.test(m)) && h.licensee && !/\b(LLC|INC|CORP|CORPORATION|CO|LP|LLP|TRUST)\b/i.test(h.licensee)) {
+    if (!(h.members || []).some(m => /^OFFICER|^MEMBER/.test(m)) && h.licensee && /^[A-Z' -]+,\s*[A-Z' .-]+$/.test(h.licensee.trim()) && !/\b(LLC|INC|CORP|CORPORATION|CO|LP|LLP|TRUST)\b/i.test(h.licensee)) {
       const name = cleanPerson(h.licensee);
-      if (name) out.push({ name, role: 'Owner', source: 'abc', official: true, url: h.url, note: `ABC licensee is a person (license ${h.license})` });
+      if (name) out.push({ name, role: 'Owner', source: 'abc', official: true, ...flag, url: h.url, note: `ABC licensee is a person (license ${h.license})${why}` });
     }
   }
   return out;
@@ -95,8 +106,10 @@ async function sosDetail(id) {
   try { const j = JSON.parse(p?.scriptResult || '{}'); const o = {}; for (const d of j.DRAWER_DETAIL_LIST || []) o[d.LABEL] = d.VALUE; return o; } catch { return {}; }
 }
 const streetKey = address => { const m = normName(String(address || '').split('\n')[0].split(',')[0]).match(/^(\d+)\s+(\S+)/); return m ? `${m[1]} ${m[2]}` : ''; };
+const sameCity = (addr, shop) => normName(addr || '').includes(normName(shop.city)) || (/Los Angeles/i.test(shop.county || '') && /los angeles/i.test(normName(addr || '')) && !/\b(long beach|torrance|whittier|downey|norwalk|pasadena|glendale|burbank)\b/i.test(shop.city || ''));
+const cityOfAddress = addr => (String(addr || '').replace(/\n/g, ', ').match(/,\s*([A-Za-z .'-]+?)\s*,\s*CA\b/i) || [])[1] || '';
 const entitySlug = name => String(name || '').replace(/,?\s*\b(inc|llc|l\.l\.c|corp|corporation|co|ltd|lp|llp|a california (?:limited liability company|corporation))\b\.?\s*$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-async function bizprofileOfficers(entityName, city) {
+export async function bizprofileOfficers(entityName, city) {
   const tryUrl = async url => {
     const r = await get(url);
     if (r.status !== 200) return null;
@@ -116,12 +129,15 @@ async function bizprofileOfficers(entityName, city) {
   if (hit) r = await tryUrl(hit.url);
   return r;
 }
-async function sosCandidates(shop, abc) {
-  const names = new Set([shop.name]);
-  for (const h of abc || []) if (h.licensee && /\b(LLC|INC|CORP|CORPORATION|CO|LP|LLP)\b/i.test(h.licensee) && (h.matched === 'address' || h.matched === 'name')) names.add(h.licensee.replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim());
+async function sosEntities(shop, abc) {
+  const names = new Map([[shop.name, false]]);   // query → reached only via another DBA at the address?
+  for (const h of abc || []) if (h.licensee && /\b(LLC|INC|CORP|CORPORATION|CO|LP|LLP)\b/i.test(h.licensee) && (h.matched === 'address' || h.matched === 'name')) {
+    const otherDba = !(h.matched === 'name' || nameOverlap(h.dba || '', shop.name) || nameOverlap(h.licensee || '', shop.name));
+    names.set(h.licensee.replace(/[.,]/g, ' ').replace(/\s+/g, ' ').trim(), otherDba);
+  }
   const shopStreet = streetKey(shop.address);
-  const out = [], entities = [];
-  for (const q of [...names].slice(0, 3)) {
+  const entities = [];
+  for (const [q, otherDba] of [...names.entries()].slice(0, 3)) {
     const rows = await sosSearch(q.replace(/[’']/g, ''));
     for (const row of rows.slice(0, 6)) {
       const title = (row.TITLE || [''])[0].replace(/\s*\(\d+\)\s*$/, '');
@@ -130,25 +146,37 @@ async function sosCandidates(shop, abc) {
       const d = await sosDetail(row.ID);
       const addr = d['Principal Address'] || '';
       const byAddress = shopStreet && streetKey(addr) === shopStreet;
-      const inCity = normName(addr).includes(normName(shop.city));
+      const inCity = sameCity(addr, shop);
       if (!(byAddress || (byName && (inCity || row.STATUS === 'Active')))) continue;
       const agent = (d.Agent || '').split('\n');
       const agentName = agent[0] === 'Individual' ? cleanPerson(agent[1]) : null;
-      const ent = { id: row.ID, name: title, status: row.STATUS, type: row.ENTITY_TYPE, address: addr.replace(/\n/g, ', '), agentName, match: byAddress ? 'address' : 'name', url: `https://bizfileonline.sos.ca.gov/search/business` };
+      const exact = nameKey(title) === nameKey(shop.name) && nameKey(shop.name).split(' ').some(w => w.length >= 3 && !GENERIC.has(w));
+      const ent = { id: row.ID, name: title, status: row.STATUS, type: row.ENTITY_TYPE, address: addr.replace(/\n/g, ', '), exact, agentName, agentIsService: agent[0] !== 'Individual' || AGENT_SERVICES.test(agent[1] || ''), match: byAddress ? 'address' : otherDba ? 'other-dba' : inCity ? 'name+city' : exact && row.STATUS === 'Active' ? 'name+exact' : 'name', url: 'https://bizfileonline.sos.ca.gov/search/business', people: [] };
       entities.push(ent);
-      if (agentName && !AGENT_SERVICES.test(agent[1] || '')) out.push({ name: agentName, role: 'Registered agent (individual)', source: 'sos-agent', official: false, weak: true, url: ent.url, note: `agent for ${title} (${row.STATUS})` });
       if (row.STATUS === 'Active' || entities.length === 1) {
-        const bp = await bizprofileOfficers(title, (addr.split('\n')[1] || shop.city).split(',')[0]);
-        if (bp) {
-          ent.bizprofile = bp.url;
-          for (const p of bp.people) { const name = cleanPerson(p.name); if (name) out.push({ name, role: niceRole(p.role), source: 'sos-officer', official: true, url: bp.url, note: `${title} officer list (SOS Statement of Information via bizprofile.net)` }); }
-        }
+        const bp = await bizprofileOfficers(title, cityOfAddress(addr) || shop.city);
+        if (bp) { ent.bizprofile = bp.url; ent.people = bp.people; }
       }
       if (entities.length >= 3) break;
     }
     if (entities.some(e => e.match === 'address')) break;
   }
-  return { candidates: out, entities };
+  return { entities };
+}
+function sosCandidates(sos, shop) {
+  const out = [];
+  for (const ent of sos?.entities || []) {
+    // only an entity at the shop's address, or one named after the shop in the shop's city, proves anything
+    if (ent.match === 'name' && shop && sameCity(ent.address, shop)) ent.match = 'name+city';
+    if (ent.match === 'name' && shop && ent.status === 'Active' && nameKey(ent.name) === nameKey(shop.name) && nameKey(shop.name).split(' ').some(w => w.length >= 3 && !GENERIC.has(w))) ent.match = 'name+exact';
+    const proven = ent.match === 'address' || ent.match === 'name+city' || ent.match === 'name+exact';
+    const flag = proven ? {} : { official: false, weak: true };
+    const how = ent.match === 'name+exact' ? ' (entity named exactly after the shop)' : '';
+    const why = proven ? how : ent.match === 'other-dba' ? ' — entity of another DBA at the same address; not proof' : ' — matched by name only, principal address elsewhere; not proof';
+    if (ent.agentName && !ent.agentIsService) out.push({ name: ent.agentName, role: 'Registered agent (individual)', source: 'sos-agent', official: false, weak: true, url: ent.url, note: `agent for ${ent.name} (${ent.status})` });
+    for (const p of ent.people || []) { const name = cleanPerson(p.name); if (name) out.push({ name, role: niceRole(p.role), source: 'sos-officer', official: true, ...flag, url: ent.bizprofile || ent.url, note: `${ent.name} officer list (SOS Statement of Information via bizprofile.net; ${ent.match} match)${why}` }); }
+  }
+  return out;
 }
 
 // ── 2. County FBN (San Diego portal; other counties need an interactive session) ──
@@ -180,17 +208,26 @@ return JSON.stringify({names, rows: rows.slice(0,40)});})()`;
   if (p?.scriptResult === 'DISCLAIMER') { await sdAccept(); p = await renderPage3('https://arcc-acclaim.sdcounty.ca.gov/fbn/SearchTypeFBNByName', { waitMs: 8000, script }); }
   const raw = String(p?.scriptResult || '');
   let parsed = null; try { parsed = JSON.parse(raw); } catch {}
+  return { query: q, names: parsed?.names || [], rows: parsed?.rows || [], registrants: fbnRegistrants(parsed?.rows || [], q), raw: parsed ? '' : raw.slice(0, 500) };
+}
+export function fbnRegistrants(rows, q) {
   const registrants = [];
-  for (const r of parsed?.rows || []) {
+  // FBN statements expire after five years and ownership changes: keep only the newest current filing
+  const dated = (rows || []).map(r => { const c = r.length >= 7 ? r : ['', ...r]; const m = (c[4] || '').match(/(\d{2})\/(\d{2})\/(\d{4})/); return { r, when: m ? `${m[3]}-${m[1]}-${m[2]}` : '', doc: c[6] }; }).filter(x => x.when && x.when >= new Date(Date.now() - 5 * 365.25 * 86400000).toISOString().slice(0, 10)).sort((a, b) => b.when.localeCompare(a.when));
+  // the newest current filing that names a person (a newer filing by the owner's corporation does not change who the owner is)
+  const persons = x => { const c = x.r.length >= 7 ? x.r : ['', ...x.r]; const rel = c[3] || ''; return rel && !/\b(INC|LLC|CORP|CORPORATION|CO|LP|LLP|TRUST|PIZZA|PIZZERIA|RESTAURANT|KITCHEN|GRILL|CAFE)\b/i.test(rel) && rel.split(/\s+/).length >= 2 && rel.split(/\s+/).length <= 4; };
+  const newestDoc = dated.find(persons)?.doc;
+  for (const r of dated.filter(x => x.doc === newestDoc).map(x => x.r)) {
     // columns: cart, row, searched name, related name, file date, doc type, document #
     const [, , searched, related, date, type, doc] = r.length >= 7 ? r : ['', ...r];
     if (!related || /\b(INC|LLC|CORP|CORPORATION|CO|LP|LLP|TRUST|PIZZA|PIZZERIA|RESTAURANT|KITCHEN|GRILL|CAFE)\b/i.test(related)) continue;
     const w = related.split(/\s+/);
     if (w.length < 2 || w.length > 4) continue;
-    const name = cleanPerson(`${w.slice(1).join(' ')} ${w[0]}`);   // index lists LAST FIRST MIDDLE
+    // the index lists LAST FIRST MIDDLE; with four words assume two surnames first (SOTO RODRIGUEZ JUAN CARLOS)
+    const name = cleanPerson(w.length === 4 ? `${w[2]} ${w[3]} ${w[0]} ${w[1]}` : `${w.slice(1).join(' ')} ${w[0]}`);
     if (name) registrants.push({ name, searched, date, type, doc });
   }
-  return { query: q, names: parsed?.names || [], rows: parsed?.rows || [], registrants, raw: parsed ? '' : raw.slice(0, 500) };
+  return registrants;
 }
 
 // ── 9. BBB ──────────────────────────────────────────────────────────────
@@ -252,7 +289,8 @@ export function decide(cands, shop) {
   const scored = [...groups.values()].map(g => {
     const bestRole = g.roles.filter(Boolean).sort((a, b) => roleRank(a) - roleRank(b))[0] || '';
     const independent = new Set([...g.sources].map(s => s.replace(/^(sos-officer|abc|fbn)$/, 'official').replace(/^(search-.*)$/, 'web')));
-    const ownerish = OWNER_ROLE.test(bestRole) && !/secretary|treasurer|cfo|chief financial/i.test(bestRole);
+    const bestPart = String(bestRole).split('/').map(x => x.trim()).sort((a, b) => rankOne(a) - rankOne(b))[0] || '';
+    const ownerish = OWNER_ROLE.test(bestPart) && !/vice president|secretary|treasurer|cfo|chief financial|asst/i.test(bestPart);
     let confidence = 'weak';
     if (g.official && ownerish) confidence = 'strong';
     else if (independent.size >= 2 && !g.weakOnly) confidence = 'strong';
@@ -261,10 +299,12 @@ export function decide(cands, shop) {
     if (nameKey(shop.name).includes(nameKey(g.names[0]))) confidence = 'weak';
     const informal = g.items.find(i => ['site', 'search-owner', 'search-news', 'search-linkedin', 'bbb'].includes(i.source));
     const display = informal ? informal.name : g.names.sort((a, b) => b.length - a.length)[0];
-    return { name: display, role: niceRole(bestRole) || 'Owner', confidence, sources: [...g.sources], urls: [...new Set(g.items.map(i => i.url).filter(Boolean))].slice(0, 3), notes: g.items.map(i => i.note).filter(Boolean).slice(0, 3), rank: roleRank(bestRole), official: g.official };
+    // among official sources the address-verified ABC license is the most current, then a current FBN, then the SOS officer list
+    const prio = Math.min(...g.items.map(i => i.official && !i.weak ? ({ abc: 0, fbn: 1, 'sos-officer': 2 }[i.source] ?? 3) : 4));
+    return { name: display, role: niceRole(bestRole) || 'Owner', confidence, sources: [...g.sources], urls: [...new Set(g.items.map(i => i.url).filter(Boolean))].slice(0, 3), notes: g.items.map(i => i.note).filter(Boolean).slice(0, 3), rank: roleRank(bestRole), prio, official: g.official };
   });
   const order = { strong: 0, medium: 1, weak: 2 };
-  scored.sort((a, b) => order[a.confidence] - order[b.confidence] || a.rank - b.rank || b.sources.length - a.sources.length);
+  scored.sort((a, b) => order[a.confidence] - order[b.confidence] || a.prio - b.prio || a.rank - b.rank || b.sources.length - a.sources.length);
   const best = scored.find(s => s.confidence !== 'weak') || null;
   return { best, all: scored.slice(0, 8) };
 }
@@ -275,12 +315,20 @@ export async function ownerDig(shop, { prior = {} } = {}) {
   // 1. ABC (reuse verify state when present)
   if (!s.abc) s.abc = await abcLookup(shop).catch(e => ({ error: e.message }));
   const abc = Array.isArray(s.abc) ? s.abc : [];
-  cands.push(...abcCandidates(abc));
+  cands.push(...abcCandidates(abc, shop));
   // 3. SOS + bizprofile
-  if (!s.sos) s.sos = await sosCandidates(shop, abc).catch(e => ({ error: e.message, candidates: [], entities: [] }));
-  cands.push(...(s.sos.candidates || []));
+  if (!s.sos || !s.sos.entities?.every(e => 'people' in e)) s.sos = await sosEntities(shop, abc).catch(e => ({ error: e.message, entities: [] }));
+  for (const ent of s.sos.entities || []) if (!ent.address && !ent.addrRetried) {
+    ent.addrRetried = true;
+    const d = await sosDetail(ent.id).catch(() => ({}));
+    const addr = (d['Principal Address'] || '').replace(/\n/g, ', ');
+    if (addr) { ent.address = addr; if (streetKey(addr) === streetKey(shop.address)) ent.match = 'address'; else if (sameCity(addr, shop) && ent.match === 'name') ent.match = 'name+city'; }
+  }
+  for (const ent of s.sos.entities || []) if (!ent.people?.length && !ent.bizprofile && !ent.retried) { ent.retried = true; const bp = await bizprofileOfficers(ent.name, cityOfAddress(ent.address) || shop.city).catch(() => null); if (bp) { ent.bizprofile = bp.url; ent.people = bp.people; } }
+  cands.push(...sosCandidates(s.sos, shop));
   // 2. County FBN (San Diego only)
   if (s.fbn === undefined) s.fbn = await sdFbn(shop).catch(e => ({ error: e.message }));
+  if (s.fbn?.rows) s.fbn.registrants = fbnRegistrants(s.fbn.rows, s.fbn.query);
   for (const r of s.fbn?.registrants || []) cands.push({ name: r.name, role: 'Registrant (FBN)', source: 'fbn', official: true, url: 'https://arcc-acclaim.sdcounty.ca.gov/fbn/SearchTypeFBNByName', note: `San Diego County FBN ${r.doc} (${r.date}) for "${r.searched}"` });
   // 4. own site: About / Our Story pages
   if (!s.site) {
@@ -303,11 +351,48 @@ export async function ownerDig(shop, { prior = {} } = {}) {
       s.searches[k] = { q, engine: r.engine, results: r.results.slice(0, 8).map(x => ({ url: x.url, title: x.title.slice(0, 140), snippet: x.snippet.slice(0, 300) })) };
     }
   }
+  const DIRECTORY = /cybo\.com|mapquest|yellowpages|manta\.com|buzzfile|dnb\.com|bizapedia|opencorporates|naicslist|bizprofile|chamberofcommerce|zoominfo|rocketreach|signalhire|apollo\.io|allbiz|localstack|merchantcircle|birdeye|restaurantji|menupix|zmenu|foursquare|tripadvisor|doordash|ubereats|grubhub|slicelife|toasttab|square\.site|clover\.com/;
+  const shopHost = (() => { try { return new URL(shop.website).hostname.replace(/^www\./, ''); } catch { return null; } })();
   for (const [k, v] of Object.entries(s.searches)) for (const x of v.results) {
-    // only results that mention the shop
+    // only results that name the shop and its city (or live on the shop's own site)
     const blob = `${x.title} ${x.snippet}`;
-    if (!nameKey(blob).includes(nameKey(shop.name).split(' ').slice(0, 2).join(' '))) continue;
-    cands.push(...minePeople(blob, k, x.url));
+    const own = shopHost && x.url.includes(shopHost);
+    const named = nameKey(blob).includes(nameKey(shop.name));
+    const placed = normName(blob).includes(normName(shop.city)) || /los angeles|\bla\b/i.test(blob) && /Los Angeles/i.test(shop.county || '');
+    if (!own && !(named && placed)) continue;
+    const weak = !own && DIRECTORY.test(x.url);
+    cands.push(...minePeople(blob, k, x.url).map(c => weak ? { ...c, weak: true, note: `${c.note} [directory site]` } : c));
+  }
+  // 8. read the promising pages themselves (own-site About/Our Story pages, local news, blogs): snippets cut names off
+  if (!s.pages) {
+    const SOCIAL_HOST = /facebook\.com|instagram\.com|tiktok\.com|twitter\.com|x\.com|youtube\.com|yelp\.com|linkedin\.com|nextdoor\.com/;
+    const seen = new Set(), picks = [];
+    for (const k of ['search-owner', 'search-news', 'search-social']) for (const x of s.searches[k]?.results || []) {
+      const own = shopHost && x.url.includes(shopHost);
+      const blob = `${x.title} ${x.snippet}`;
+      const named = nameKey(blob).includes(nameKey(shop.name));
+      const story = /our story|about|owner|founder|family|spotlight|interview|meet|history|profile|opens|opened|behind/i.test(blob);
+      if (seen.has(x.url) || SOCIAL_HOST.test(x.url) || DIRECTORY.test(x.url)) continue;
+      if (own || (named && story)) { seen.add(x.url); picks.push({ url: x.url, kind: own ? 'site' : 'search-news' }); }
+      if (picks.length >= 5) break;
+    }
+    s.pages = [];
+    for (const p of picks) {
+      const r = await get(p.url);
+      let text = stripTags(r.html).slice(0, 40000), how = 'fetch';
+      // bot walls (Cloudflare "Just a moment") and JS-only sites: read through headless Chrome
+      if (r.status >= 400 || /just a moment|enable javascript/i.test(text) || text.length < 1500) {
+        const rp = await renderPage3(p.url, { waitMs: 12000 });
+        if (rp?.text && rp.text.length > text.length) { text = rp.text.replace(/\s+/g, ' ').slice(0, 40000); how = 'chrome'; }
+      }
+      s.pages.push({ url: p.url, kind: p.kind, status: r.status, how, chars: text.length, sentences: ownerSentences(text).slice(0, 4), text: text.slice(0, 15000) });
+    }
+  }
+  for (const p of s.pages) {
+    if (!p.text) continue;
+    // a page must name the shop (own-site pages always do); news pages must also place it
+    if (p.kind !== 'site' && !(nameKey(p.text).includes(nameKey(shop.name)) && normName(p.text).includes(normName(shop.city)))) continue;
+    cands.push(...minePeople(p.text, p.kind, p.url));
   }
   // 9. BBB
   if (!s.bbb) s.bbb = await bbb(shop).catch(e => ({ error: e.message }));

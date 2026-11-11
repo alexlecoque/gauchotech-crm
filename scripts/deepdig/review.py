@@ -1,5 +1,6 @@
 # Print the review table for an area's verified targets: python3 review.py <area> <verified.csv>
 import json,csv,sys,os
+sys.stdout.reconfigure(errors="replace")
 PROJECT=os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..'))
 area, f = sys.argv[1], sys.argv[2]
 s=json.load(open(f'{PROJECT}/out/logs/verify-{area}.json'))

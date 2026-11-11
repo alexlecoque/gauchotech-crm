@@ -194,7 +194,7 @@ export const AREAS = {
   'inland-empire': {
     label: 'Inland Empire',
     county: 'San Bernardino',
-    countyByCity: { Riverside: 'Riverside', Corona: 'Riverside' },
+    countyByCity: { Riverside: 'Riverside', Corona: 'Riverside', Norco: 'Riverside', Eastvale: 'Riverside', 'Jurupa Valley': 'Riverside', 'Moreno Valley': 'Riverside', Perris: 'Riverside' },
     state: 'CA',
     // starts at -117.70 where the North OC box ends
     bounds: {

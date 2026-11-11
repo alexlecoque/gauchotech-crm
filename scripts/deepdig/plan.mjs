@@ -10,7 +10,8 @@ const ownCities = new Set(AREAS[area].localities.map(norm));
 const foreign = new Map();
 for (const [k, a] of Object.entries(AREAS)) if (k !== area) for (const c of a.localities) if (!ownCities.has(norm(c))) foreign.set(norm(c), k);
 // a row belongs to another area when its city is one of that area's localities and (if that area has a box) it sits inside the box
-const inBox = (r, a) => !a.bounds || (Number(r.lat) >= a.bounds.low.latitude && Number(r.lat) <= a.bounds.high.latitude && Number(r.lng) >= a.bounds.low.longitude && Number(r.lng) <= a.bounds.high.longitude);
+// an area without a box (e.g. contra-costa, whose Brentwood is not LA's Brentwood) cannot claim a row from a boxed area
+const inBox = (r, a) => a.bounds ? (Number(r.lat) >= a.bounds.low.latitude && Number(r.lat) <= a.bounds.high.latitude && Number(r.lng) >= a.bounds.low.longitude && Number(r.lng) <= a.bounds.high.longitude) : !AREAS[area].bounds;
 const foreignArea = r => { const k = !ownCities.has(norm(r.city)) && foreign.get(norm(r.city)); return k && inBox(r, AREAS[k]) ? k : null; };
 // ICP-fit heuristic for shops nobody reviewed by hand (unknown-POS shops): counter/takeout pizzeria vs sit-down, bar, venue
 const UNFIT_NAME = /\b(ristorante|trattoria|osteria|bar|grill|lounge|bistro|brew|tavern|cater|catering|cucina|steakhouse|wine)\b/i;
