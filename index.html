@@ -32,7 +32,8 @@
   input:focus,select:focus,textarea:focus{border-color:var(--color-text-info);box-shadow:0 0 0 2px rgba(133,173,165,0.15)}
   textarea{height:72px;resize:vertical}
 
-  .app{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+  #matrix-rain{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+  .app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem}
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
   .logo{font-size:18px;font-weight:700;letter-spacing:-0.02em;color:var(--color-text-primary)}
   .logo-word{font-family:var(--font);font-weight:700;color:var(--color-text-primary)}
@@ -171,6 +172,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 <body>
+<canvas id="matrix-rain" aria-hidden="true"></canvas>
 <div class="app">
 
   <div class="topbar">
@@ -1411,6 +1413,72 @@ async function deleteTodo(id) {
 }
 
 init();
+</script>
+
+<script>
+// Matrix rain: faint at rest, floods in while scrolling, then fades back out.
+(function () {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.getElementById('matrix-rain');
+  const ctx = canvas.getContext('2d');
+  const CHARS = 'ｦｱｳｴｵｶｷｹｺｻｼｽｾﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ0123456789Z:.=*+-<>';
+  const SIZE = 16;
+  let cols = 0, heads = [], intensity = 0, lastTick = 0, lastScrollY = window.scrollY;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.ceil(canvas.width / SIZE);
+    heads = Array.from({ length: cols }, () => -1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function bump(amount) { intensity = Math.min(1, intensity + amount); }
+  window.addEventListener('scroll', () => {
+    const dy = Math.abs(window.scrollY - lastScrollY);
+    lastScrollY = window.scrollY;
+    bump(Math.min(0.25, dy / 600));
+  }, { passive: true });
+  window.addEventListener('wheel', () => bump(0.04), { passive: true });
+
+  function tick() {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0,0,0,' + (0.07 + (1 - intensity) * 0.05) + ')';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.font = SIZE + 'px "JetBrains Mono", monospace';
+
+    const spawn = 0.002 + intensity * 0.06;
+    for (let i = 0; i < cols; i++) {
+      if (heads[i] < 0) {
+        if (Math.random() < spawn) heads[i] = 0;
+        continue;
+      }
+      const x = i * SIZE, y = heads[i] * SIZE;
+      const ch = CHARS[Math.floor(Math.random() * CHARS.length)];
+      ctx.fillStyle = '#d8ffe0';
+      ctx.shadowColor = '#00ff41';
+      ctx.shadowBlur = 8;
+      ctx.fillText(ch, x, y);
+      ctx.shadowBlur = 0;
+      if (heads[i] > 0) {
+        ctx.fillStyle = '#00d636';
+        ctx.fillText(CHARS[Math.floor(Math.random() * CHARS.length)], x, y - SIZE);
+      }
+      heads[i]++;
+      if (y > canvas.height && Math.random() > 0.9) heads[i] = -1;
+    }
+  }
+
+  function frame(t) {
+    intensity = Math.max(0, intensity - 0.006);
+    const interval = 85 - intensity * 50;
+    if (t - lastTick >= interval) { lastTick = t; tick(); }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
